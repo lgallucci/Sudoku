@@ -1,0 +1,88 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace SudokuGraphics
+{
+    public class GraphicsEngine
+    {
+        public Point ScreenSize { get; set; }
+        public GraphicsDeviceManager GraphicsDeviceManager { get; set; }
+        public static GraphicsDevice Device { get; set; }
+        public static SpriteBatch SpriteBatch { get; set; }
+        private RenderTarget2D _sceneRenderTarget;
+        public Color BaseColor { get; set; } = new Color(50, 50, 50);
+
+        public GraphicsEngine(Game game)
+        {
+            GraphicsDeviceManager = new GraphicsDeviceManager(game);
+
+            GraphicsDeviceManager.SynchronizeWithVerticalRetrace = false;
+            GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.HiDef;
+        }
+
+        public void Load(GraphicsDevice device, ContentManager content)
+        {
+            Device = device;
+            // Create a new SpriteBatch, which can be used to draw textures.
+            SpriteBatch = new SpriteBatch(device);
+
+            _sceneRenderTarget = CreateSceneRenderTarget();
+
+            Art.Load(content, device);
+        }
+
+        public void Unload()
+        {
+            _sceneRenderTarget?.Dispose();
+        }
+
+        private RenderTarget2D CreateSceneRenderTarget()
+        {
+            return new RenderTarget2D(Device, ScreenSize.X, ScreenSize.Y, false,
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+        }
+
+        public void SetScreenSize(int screenWidth, int screenHeight)
+        {
+            ScreenSize = new Point(screenWidth, screenHeight);
+
+            GraphicsDeviceManager.PreferredBackBufferWidth = screenWidth;
+            GraphicsDeviceManager.PreferredBackBufferHeight = screenHeight;
+
+            GraphicsDeviceManager.ApplyChanges();
+
+            if (Device != null && _sceneRenderTarget != null)
+            {
+                _sceneRenderTarget.Dispose();
+                _sceneRenderTarget = CreateSceneRenderTarget();
+            }
+        }
+        
+        public void BeginSprites()
+        {
+            Device.SetRenderTarget(_sceneRenderTarget);
+            Device.Clear(BaseColor);
+            SpriteBatch.Begin();
+        }
+
+        public void EndSprites()
+        {
+            SpriteBatch.End();
+
+            Device.SetRenderTarget(null);
+            Device.Clear(Color.Transparent);
+
+            SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
+            SpriteBatch.Draw(_sceneRenderTarget, Vector2.Zero, Color.White);
+            SpriteBatch.End();
+        }
+
+        //Drawing Methods
+        
+    }
+}
