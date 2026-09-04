@@ -16,7 +16,7 @@ namespace SudokuGraphics
         public GraphicsDevice Device { get; private set; }
         public SpriteBatch SpriteBatch { get; private set; }
         public RenderContext Context { get; private set; }
-        public Color BaseColor { get; set; } = new Color(50, 50, 50);
+        public Color BaseColor { get; set; } = new Color(125, 125, 125);
         private RenderTarget2D _sceneRenderTarget;
 
         public GraphicsEngine(Game game)

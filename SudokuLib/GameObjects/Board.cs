@@ -18,7 +18,8 @@ namespace SudokuLib.GameObjects
                     int value = initialValues[row, col];
                     var cell = new Cell(row, col)
                     {
-                        Value = value
+                        Value = value,
+                        IsGiven = value > 0
                     };
                     cells[row, col] = cell;
                     Pile.TryUseValue(value);

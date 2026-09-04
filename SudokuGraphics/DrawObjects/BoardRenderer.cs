@@ -34,7 +34,7 @@ namespace SudokuGraphics.DrawObjects
             }
 
             _boardGraphics.DrawBorders(context.SpriteBatch, boardState);
-            _pileGraphics.DrawPile(context.SpriteBatch, board.Pile);
+            _pileGraphics.DrawPile(context.SpriteBatch, board.Pile, boardState);
         }
 
         private void BindContext(RenderContext context)

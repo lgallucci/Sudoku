@@ -50,9 +50,9 @@ namespace Sudoku.GameEngines
         public override void Update(GameTime gameTime, ref GameStateData _gameStateData)
         {
             //TODO: Implement keyboard input handling (number keys and numapad) for selecting cells and entering values.
-            //TODO: Implement game logic for checking if the board is solved and updating the game state accordingly.
             //TODO: Implement keyboard input handling for entering notes in cells. (shift + number)
-            
+            //TODO: Implement mouse input handling for selecting cells and interacting with the game.
+            //TODO: Implement game logic for checking if the board is solved and updating the game state accordingly.            
         }
     }
 }

@@ -7,8 +7,8 @@ namespace SudokuGraphics
     public sealed class BoardViewState
     {
         public int CellSize { get; internal set; } = 60;
-        public int TopLeftX { get; internal set; } = 25;
-        public int TopLeftY { get; internal set; } = 25;
+        public int TopLeftX { get; internal set; } = 20;
+        public int TopLeftY { get; internal set; } = 100;
         public int BorderThickness { get; internal set; } = 4;
         public Color BorderColor { get; internal set; } = Color.Black;
         public int SelectedValue { get; internal set; }

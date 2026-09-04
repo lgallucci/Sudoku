@@ -2,6 +2,7 @@ using FontStashSharp;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using SudokuLib.GameObjects;
+using System;
 
 namespace SudokuGraphics.DrawObjects
 {
@@ -10,7 +11,7 @@ namespace SudokuGraphics.DrawObjects
         internal void DrawCell(SpriteBatch spriteBatch, Cell cell, BoardViewState boardState)
         {
             // Draw the cell background
-            var cellColor = cell.IsSelected ? Color.LightBlue : Color.White;
+            var cellColor = GetCellColor(cell);
             var cellX = boardState.GetCellX(cell.Col);
             var cellY = boardState.GetCellY(cell.Row);
             spriteBatch.Draw(Art.Pixel, new Rectangle(cellX, cellY, boardState.CellSize, boardState.CellSize), cellColor);
@@ -25,6 +26,21 @@ namespace SudokuGraphics.DrawObjects
                 cellY + (boardState.CellSize - textSize.Y) / 2);
                 spriteBatch.DrawString(font, valueString, position, Color.Black);
             }
+        }
+
+        private Color GetCellColor(Cell cell)
+        {
+             if (cell.IsGiven)
+             {
+                if (cell.IsSelected)
+                    return Color.SlateBlue;
+                else
+                    return Color.LightGray;
+             }
+            else if (cell.IsSelected)
+                return Color.LightBlue;
+            else
+                return Color.White;
         }
     }
 }
