@@ -11,8 +11,8 @@ namespace SudokuGraphics
         public int TopLeftY { get; internal set; } = 100;
         public int BorderThickness { get; internal set; } = 4;
         public Color BorderColor { get; internal set; } = Color.Black;
-        public int SelectedValue { get; internal set; }
-        public Cell SelectedCell { get; internal set; }
+        public int SelectedValue { get; set; }
+        public Cell SelectedCell { get; set; }
 
         public int BoardWidth => 2 * BorderThickness + 9 * CellSize + GetGapOffset(8);
         public int BoardHeight => BoardWidth;

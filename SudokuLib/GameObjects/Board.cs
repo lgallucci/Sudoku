@@ -66,6 +66,11 @@ namespace SudokuLib.GameObjects
 
         private bool IsValidMove(int row, int col, int value)
         {
+            if (value == 0) // clearing a cell is always allowed
+            {
+                return true;
+            }
+
             // Check if the value is already in the same row or column
             for (int i = 0; i < 9; i++)
             {
