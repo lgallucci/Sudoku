@@ -15,7 +15,7 @@
         "type": "dotnet",
         "request": "launch",
         "preLaunchTask": "dotnet: build",  // Optional
-        "projectPath": "${workspaceFolder}/Sudoku.csproj"
+        "projectPath": "${workspaceFolder}/Sudoku/Sudoku.csproj"
       }
 
     ]

@@ -9,6 +9,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../SudokuLib/SudokuLib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     
     <None Update="Content\fonts\roboto.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,10 +13,11 @@ namespace SudokuGraphics
     {
         public Point ScreenSize { get; set; }
         public GraphicsDeviceManager GraphicsDeviceManager { get; set; }
-        public static GraphicsDevice Device { get; set; }
-        public static SpriteBatch SpriteBatch { get; set; }
-        private RenderTarget2D _sceneRenderTarget;
+        public GraphicsDevice Device { get; private set; }
+        public SpriteBatch SpriteBatch { get; private set; }
+        public RenderContext Context { get; private set; }
         public Color BaseColor { get; set; } = new Color(50, 50, 50);
+        private RenderTarget2D _sceneRenderTarget;
 
         public GraphicsEngine(Game game)
         {
@@ -23,6 +25,8 @@ namespace SudokuGraphics
 
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = false;
             GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.HiDef;
+            
+            Context = new RenderContext();
         }
 
         public void Load(GraphicsDevice device, ContentManager content)
@@ -30,6 +34,7 @@ namespace SudokuGraphics
             Device = device;
             // Create a new SpriteBatch, which can be used to draw textures.
             SpriteBatch = new SpriteBatch(device);
+            Context.SpriteBatch = SpriteBatch;
 
             _sceneRenderTarget = CreateSceneRenderTarget();
 
@@ -83,6 +88,10 @@ namespace SudokuGraphics
         }
 
         //Drawing Methods
-        
+        public void DrawString(string text)
+        {
+            var fontSize = Art.NewGameFont.MeasureString(text);
+            SpriteBatch.DrawString(Art.NewGameFont, text, new Vector2((ScreenSize.X / 2) - fontSize.X / 2, (ScreenSize.Y / 2) - fontSize.Y / 2), Color.DeepPink);
+        }
     }
 }

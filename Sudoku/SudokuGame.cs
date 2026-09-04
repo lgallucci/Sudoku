@@ -14,7 +14,7 @@ namespace Sudoku
 
     public class GameStateData
     {
-        public GameState CurrentState { get; set; }
+        public GameState CurrentState { get; set; } = GameState.NewGame;
         public int Difficulty { get; set; }
     }
 
@@ -47,13 +47,13 @@ namespace Sudoku
         /// </summary>
         protected override void Initialize()
         {
+            _gameStateData = new GameStateData();
+            
             base.Initialize();
         }
 
         private void SetWindowSize()
         {
-            _gameEngine.SetScreenSize(_screenWidth, _screenHeight);
-
             _graphicsEngine.SetScreenSize(_screenWidth, _screenHeight);
         }
 
@@ -85,7 +85,7 @@ namespace Sudoku
             if (IsActive)
             {
                 GameState? _previousState =  _gameStateData?.CurrentState;
-                _gameEngine.Update(ref _gameStateData);
+                _gameEngine.Update(gameTime, ref _gameStateData);
 
                 if (_gameStateData?.CurrentState != _previousState)
                 {

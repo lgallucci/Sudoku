@@ -1,32 +1,37 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 using Sudoku.GameLogic;
 using SudokuGraphics;
+using SudokuGraphics.DrawObjects;
+using SudokuLib.GameObjects;
 
 namespace Sudoku.GameEngines
 {
     public class PlayingGameEngine : GameEngine
     {
-
+        private readonly BoardViewState _view;
+        private readonly BoardRenderer _boardRenderer;
+        private readonly Board _board;
+        private readonly int[,] _solution;
+        private readonly List<(int, int, int)> _removedValues;
+        
         public PlayingGameEngine(int difficulty)
         {
-            //TODO: Initialize the board based on the difficulty level
-            var board = SudokuGenerator.NewStartingBoard(difficulty);
-        }
+            (_removedValues, var startingBoard, _solution) = SudokuGenerator.NewStartingBoard(difficulty);
 
-        public override void SetScreenSize(int screenWidth, int screenHeight)
-        {
-            throw new NotImplementedException();
+            _board = new Board(startingBoard);
+
+            _view = new BoardViewState();
+            _boardRenderer = new BoardRenderer();
         }
 
         public override void Draw(GraphicsEngine _graphicsEngine)
         {
-            throw new NotImplementedException();
+            _boardRenderer.RenderBoard(_board, _view, _graphicsEngine.Context);
         }
 
-        public override void Update(ref GameStateData _gameStateData)
+        public override void Update(GameTime gameTime, ref GameStateData _gameStateData)
         {
             throw new NotImplementedException();
         }
