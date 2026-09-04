@@ -18,14 +18,22 @@ namespace SudokuLib.GameObjects
             }
         }
 
-        public bool TryUseValue(int value)
+        public bool TryUseValue(int value, int previousValue = 0)
         {
-            if (value < 1 || value > 9)
+            if (value < 0 || value > 9)
             {
                 throw new ArgumentOutOfRangeException("Value must be between 1 and 9.");
             }
 
-            if (Values[value] > 0)
+            if (value == 0) // 0 represents an empty cell, so we don't need to use any value
+            {
+                if (previousValue != 0)
+                {
+                    Values[previousValue]++;
+                    return true;
+                }
+            }
+            else if (Values[value] > 0)
             {
                 Values[value]--;
                 return true;

@@ -16,22 +16,28 @@ namespace SudokuLib.GameObjects
                 for (int col = 0; col < 9; col++)
                 {
                     int value = initialValues[row, col];
-                    TrySetCellValue(row, col, value);
+                    var cell = new Cell(row, col)
+                    {
+                        Value = value
+                    };
+                    cells[row, col] = cell;
+                    Pile.TryUseValue(value);
                 }
             }
         }
 
         public bool TrySetCellValue(int row, int col, int value)
         {
-            if (value < 1 || value > 9)
+            if (value < 0 || value > 9)
             {
-                throw new ArgumentOutOfRangeException("Value must be between 1 and 9.");
+                throw new ArgumentOutOfRangeException("Value must be between 0 and 9.");
             }
 
             if (IsValidMove(row, col, value))
             {
+                var previousValue = cells[row, col].Value;
                 cells[row, col].Value = value;
-                Pile.TryUseValue(value);
+                Pile.TryUseValue(value, previousValue);
                 return true;
             }
             return false;

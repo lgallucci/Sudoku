@@ -15,7 +15,7 @@ namespace Sudoku
     public class GameStateData
     {
         public GameState CurrentState { get; set; } = GameState.NewGame;
-        public int Difficulty { get; set; }
+        public int Difficulty { get; set; } = 3;
     }
 
     public class SudokuGame : Game

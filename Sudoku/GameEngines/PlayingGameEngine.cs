@@ -18,7 +18,23 @@ namespace Sudoku.GameEngines
         
         public PlayingGameEngine(int difficulty)
         {
-            (_removedValues, var startingBoard, _solution) = SudokuGenerator.NewStartingBoard(difficulty);
+            int[,] startingBoard;
+            if (difficulty == 1)
+            {
+                (_removedValues, startingBoard, _solution) = SudokuGenerator.NewStartingBoard(36);
+            }
+            else if (difficulty == 2)
+            {
+                (_removedValues, startingBoard, _solution) = SudokuGenerator.NewStartingBoard(46);
+            }
+            else if (difficulty == 3)
+            {
+                (_removedValues, startingBoard, _solution) = SudokuGenerator.NewStartingBoard(51);
+            }
+            else
+            {
+                (_removedValues, startingBoard, _solution) = SudokuGenerator.NewStartingBoard(55);
+            }
 
             _board = new Board(startingBoard);
 
@@ -33,7 +49,10 @@ namespace Sudoku.GameEngines
 
         public override void Update(GameTime gameTime, ref GameStateData _gameStateData)
         {
-            throw new NotImplementedException();
+            //TODO: Implement keyboard input handling (number keys and numapad) for selecting cells and entering values.
+            //TODO: Implement game logic for checking if the board is solved and updating the game state accordingly.
+            //TODO: Implement keyboard input handling for entering notes in cells. (shift + number)
+            
         }
     }
 }

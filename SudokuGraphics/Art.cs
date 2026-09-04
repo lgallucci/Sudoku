@@ -19,7 +19,7 @@ namespace SudokuGraphics
             robotoFont.AddFont(File.ReadAllBytes("Content/fonts/roboto.ttf"));
 
             NoteFont = robotoFont.GetFont(10);
-            CellFont = robotoFont.GetFont(24);
+            CellFont = robotoFont.GetFont(32);
             NewGameFont = robotoFont.GetFont(48);
 
             Pixel = new Texture2D(device, 1, 1);
