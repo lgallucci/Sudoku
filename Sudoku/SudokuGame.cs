@@ -15,7 +15,7 @@ namespace Sudoku
     public class GameStateData
     {
         public GameState CurrentState { get; set; } = GameState.NewGame;
-        public int Difficulty { get; set; } = 3;
+        public int Difficulty { get; set; } = 1;
     }
 
     public class SudokuGame : Game
@@ -75,6 +75,7 @@ namespace Sudoku
         {
             _graphicsEngine.Unload();
         }
+        
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.

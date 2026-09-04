@@ -1,3 +1,5 @@
+using FontStashSharp;
+using Microsoft.Xna.Framework;
 using SudokuLib.GameObjects;
 
 namespace SudokuGraphics.DrawObjects
@@ -35,6 +37,13 @@ namespace SudokuGraphics.DrawObjects
 
             _boardGraphics.DrawBorders(context.SpriteBatch, boardState);
             _pileGraphics.DrawPile(context.SpriteBatch, board.Pile, boardState);
+
+            if (boardState.IsSolved)
+            {
+                var winText = "You win! Click to play again...";
+                var fontSize = Art.NewGameFont.MeasureString(winText);
+                context.SpriteBatch.DrawString(Art.NewGameFont, winText, new Vector2(20, 20), Color.GreenYellow);
+            }
         }
 
         private void BindContext(RenderContext context)

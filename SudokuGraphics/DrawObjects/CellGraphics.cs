@@ -24,7 +24,7 @@ namespace SudokuGraphics.DrawObjects
                 var textSize = font.MeasureString(valueString);
                 var position = new Vector2(cellX + (boardState.CellSize - textSize.X) / 2,
                 cellY + (boardState.CellSize - textSize.Y) / 2);
-                spriteBatch.DrawString(font, valueString, position, Color.Black);
+                spriteBatch.DrawString(font, valueString, position, GetFontColor(cell));
             }
         }
 
@@ -34,13 +34,28 @@ namespace SudokuGraphics.DrawObjects
              {
                 if (cell.IsSelected)
                     return Color.SlateBlue;
+                else if (cell.IsHighlighted)
+                    return Color.PaleGoldenrod;
                 else
                     return Color.LightGray;
              }
             else if (cell.IsSelected)
                 return Color.LightBlue;
+            else if (cell.IsHighlighted)
+                return Color.LightGoldenrodYellow;
             else
                 return Color.White;
+        }
+
+        private Color GetFontColor(Cell cell)
+        {
+            if (cell.IsNumberHighlighted)
+                return Color.Tomato;
+            else
+                if (cell.IsGiven)
+                    return Color.Black;
+                else
+                    return Color.DarkBlue;
         }
     }
 }

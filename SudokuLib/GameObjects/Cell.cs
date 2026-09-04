@@ -1,3 +1,5 @@
+using System;
+
 namespace SudokuLib.GameObjects
 {
     public class Cell
@@ -29,6 +31,16 @@ namespace SudokuLib.GameObjects
                     Notes[x, y] = new Note(x, y);
                 }
             }
+        }
+
+        public void SetValue(int value)
+        {
+            if (value < 0 || value > 9)
+            {
+                throw new ArgumentOutOfRangeException("Value must be between 0 and 9.");
+            }
+            Value = value;
+            ClearNotes();
         }
 
         public void ClearNotes()

@@ -18,7 +18,6 @@ namespace Sudoku.GameEngines
         private readonly List<(int, int, int)> _removedValues;
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
-        private bool _isSolved;
         
         public PlayingGameEngine(int difficulty)
         {
@@ -56,7 +55,7 @@ namespace Sudoku.GameEngines
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();
 
-            if (!_isSolved)
+            if (!_view.IsSolved)
             {
                 if (mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released)
                 {
@@ -67,6 +66,7 @@ namespace Sudoku.GameEngines
                 HandleKeyboardInput(keyboardState);
                 CheckForSolved();
             }
+
 
             _previousMouseState = mouseState;
             _previousKeyboardState = keyboardState;
@@ -91,12 +91,84 @@ namespace Sudoku.GameEngines
 
         private void SelectCell(Cell cell)
         {
+            ClearHighlights();
+
             if (_view.SelectedCell != null)
             {
                 _view.SelectedCell.IsSelected = false;
             }
             cell.IsSelected = true;
             _view.SelectedCell = cell;
+
+            HighlightRowColumnAndBox(cell);
+            HighlightMatchingNumbers(cell.Value);
+        }
+
+        private void ClearHighlights()
+        {
+            for (int row = 0; row < 9; row++)
+            {
+                for (int col = 0; col < 9; col++)
+                {
+                    var cell = _board.GetCell(row, col);
+                    cell.IsHighlighted = false;
+                    cell.IsNumberHighlighted = false;
+
+                    foreach (var note in cell.Notes)
+                    {
+                        note.IsNumberHighlighted = false;
+                    }
+                }
+            }
+        }
+
+        private void HighlightRowColumnAndBox(Cell selectedCell)
+        {
+            int startRow = (selectedCell.Row / 3) * 3;
+            int startCol = (selectedCell.Col / 3) * 3;
+
+            for (int row = 0; row < 9; row++)
+            {
+                for (int col = 0; col < 9; col++)
+                {
+                    bool inRow = row == selectedCell.Row;
+                    bool inCol = col == selectedCell.Col;
+                    bool inBox = row >= startRow && row < startRow + 3 && col >= startCol && col < startCol + 3;
+
+                    if (inRow || inCol || inBox)
+                    {
+                        _board.GetCell(row, col).IsHighlighted = true;
+                    }
+                }
+            }
+        }
+
+        private void HighlightMatchingNumbers(int value)
+        {
+            if (value <= 0)
+            {
+                return;
+            }
+
+            for (int row = 0; row < 9; row++)
+            {
+                for (int col = 0; col < 9; col++)
+                {
+                    var cell = _board.GetCell(row, col);
+                    if (cell.Value == value)
+                    {
+                        cell.IsNumberHighlighted = true;
+                    }
+
+                    foreach (var note in cell.Notes)
+                    {
+                        if (note.Value == value)
+                        {
+                            note.IsNumberHighlighted = true;
+                        }
+                    }
+                }
+            }
         }
 
         private void HandleArrowKeys(KeyboardState keyboardState)
@@ -149,14 +221,17 @@ namespace Sudoku.GameEngines
                     {
                         ToggleNote(selectedCell, value);
                     }
-                    else
+                    else if (_board.TrySetCellValue(selectedCell.Row, selectedCell.Col, value))
                     {
-                        _board.TrySetCellValue(selectedCell.Row, selectedCell.Col, value);
+                        SelectCell(selectedCell); // refresh highlights to match the cell's new value
                     }
                 }
                 else if (key == Keys.Delete || key == Keys.Back)
                 {
-                    _board.TrySetCellValue(selectedCell.Row, selectedCell.Col, 0);
+                    if (_board.TrySetCellValue(selectedCell.Row, selectedCell.Col, 0))
+                    {
+                        SelectCell(selectedCell);
+                    }
                 }
             }
         }
@@ -192,7 +267,7 @@ namespace Sudoku.GameEngines
                     }
                 }
             }
-            _isSolved = true;
+            _view.IsSolved = true;
         }
     }
 }

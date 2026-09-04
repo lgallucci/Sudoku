@@ -26,8 +26,16 @@ namespace SudokuGraphics.DrawObjects
                     boardState.GetCellY(cell.Row) + noteRow * noteSize + (noteSize - textSize.Y) / 2
                 );
 
-                spriteBatch.DrawString(font, noteString, position, Color.Gray);
+                spriteBatch.DrawString(font, noteString, position, GetFontColor(cell, note));
             }
+        }
+
+        private Color GetFontColor(Cell cell, Note note)
+        {
+            if (note.IsNumberHighlighted)
+                return Color.Tomato;
+            else
+                return Color.Gray;
         }
     }
 }

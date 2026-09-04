@@ -37,7 +37,7 @@ namespace SudokuLib.GameObjects
             if (IsValidMove(row, col, value))
             {
                 var previousValue = cells[row, col].Value;
-                cells[row, col].Value = value;
+                cells[row, col].SetValue(value);
                 Pile.TryUseValue(value, previousValue);
                 return true;
             }
