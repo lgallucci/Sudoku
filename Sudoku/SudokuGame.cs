@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Sudoku.GameLogic;
+using SudokuLib.GameLogic;
 using Microsoft.Xna.Framework;
 using SudokuGraphics;
 using Sudoku.GameEngines;
@@ -15,7 +15,7 @@ namespace Sudoku
     public class GameStateData
     {
         public GameState CurrentState { get; set; } = GameState.NewGame;
-        public int Difficulty { get; set; } = 1;
+        public int Difficulty { get; set; } = 2;
     }
 
     public class SudokuGame : Game

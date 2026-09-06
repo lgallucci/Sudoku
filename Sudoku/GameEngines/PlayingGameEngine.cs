@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using Sudoku.GameLogic;
+using SudokuLib.GameLogic;
 using SudokuGraphics;
 using SudokuGraphics.DrawObjects;
 using SudokuLib.GameObjects;

@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SudokuGraphics", "SudokuGra
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SudokuLib", "SudokuLib\SudokuLib.csproj", "{72667751-CEA2-4162-B5C2-234C7517C6FC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.Tests", "Sudoku.Tests\Sudoku.Tests.csproj", "{35035ACE-9C76-4AF3-8A87-6893C377ECE9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{72667751-CEA2-4162-B5C2-234C7517C6FC}.Release|x64.Build.0 = Release|Any CPU
 		{72667751-CEA2-4162-B5C2-234C7517C6FC}.Release|x86.ActiveCfg = Release|Any CPU
 		{72667751-CEA2-4162-B5C2-234C7517C6FC}.Release|x86.Build.0 = Release|Any CPU
+		{35035ACE-9C76-4AF3-8A87-6893C377ECE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35035ACE-9C76-4AF3-8A87-6893C377ECE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35035ACE-9C76-4AF3-8A87-6893C377ECE9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{35035ACE-9C76-4AF3-8A87-6893C377ECE9}.Debug|x64.Build.0 = Debug|Any CPU
+		{35035ACE-9C76-4AF3-8A87-6893C377ECE9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{35035ACE-9C76-4AF3-8A87-6893C377ECE9}.Debug|x86.Build.0 = Debug|Any CPU
+		{35035ACE-9C76-4AF3-8A87-6893C377ECE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35035ACE-9C76-4AF3-8A87-6893C377ECE9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35035ACE-9C76-4AF3-8A87-6893C377ECE9}.Release|x64.ActiveCfg = Release|Any CPU
+		{35035ACE-9C76-4AF3-8A87-6893C377ECE9}.Release|x64.Build.0 = Release|Any CPU
+		{35035ACE-9C76-4AF3-8A87-6893C377ECE9}.Release|x86.ActiveCfg = Release|Any CPU
+		{35035ACE-9C76-4AF3-8A87-6893C377ECE9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

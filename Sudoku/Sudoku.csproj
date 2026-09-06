@@ -5,6 +5,7 @@
     <SelfContained>true</SelfContained>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../SudokuLib/SudokuLib.csproj" />
     <ProjectReference Include="../SudokuGraphics/SudokuGraphics.csproj" />
   </ItemGroup>
 </Project>
