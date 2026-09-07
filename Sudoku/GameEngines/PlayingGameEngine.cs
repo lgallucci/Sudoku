@@ -122,11 +122,26 @@ namespace Sudoku.GameEngines
             }
         }
 
+        private void ClearNotesRowColumnAndBox(Cell selectedCell)
+        {
+            ExecuteOnRowAndColumn(selectedCell, (row, col) => 
+            { 
+                ClearNote(_board.GetCell(row, col), selectedCell.Value);
+            });
+        }
+
         private void HighlightRowColumnAndBox(Cell selectedCell)
         {
+            ExecuteOnRowAndColumn(selectedCell, (row, col) => 
+            { 
+                _board.GetCell(row, col).IsHighlighted = true;
+            });            
+        }
+
+        private void ExecuteOnRowAndColumn(Cell selectedCell, Action<int, int> action)
+        {            
             int startRow = (selectedCell.Row / 3) * 3;
             int startCol = (selectedCell.Col / 3) * 3;
-
             for (int row = 0; row < 9; row++)
             {
                 for (int col = 0; col < 9; col++)
@@ -137,7 +152,7 @@ namespace Sudoku.GameEngines
 
                     if (inRow || inCol || inBox)
                     {
-                        _board.GetCell(row, col).IsHighlighted = true;
+                        action(row, col);
                     }
                 }
             }
@@ -223,6 +238,7 @@ namespace Sudoku.GameEngines
                     }
                     else if (_board.TrySetCellValue(selectedCell.Row, selectedCell.Col, value))
                     {
+                        ClearNotesRowColumnAndBox(selectedCell);
                         SelectCell(selectedCell); // refresh highlights to match the cell's new value
                     }
                 }
@@ -253,6 +269,11 @@ namespace Sudoku.GameEngines
         {
             var note = cell.Notes[(value - 1) / 3, (value - 1) % 3];
             note.Value = note.Value == value ? 0 : value;
+        }
+
+        private static void ClearNote(Cell cell, int value)
+        {
+            cell.Notes[(value - 1) / 3, (value - 1) % 3].Value = 0;
         }
 
         private void CheckForSolved()
