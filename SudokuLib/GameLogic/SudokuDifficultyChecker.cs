@@ -10,9 +10,11 @@ public class SudokuDifficultyChecker
     private readonly HashSet<int>[,] _candidates;
     private int _highestTierUsed = 1;
     private bool _isSolved = false;
+    private string _hardestAlgorithmUsed = "Naked/Hidden Singles";
 
     public bool IsSolved => _isSolved;
     public int HighestTierUsed => _highestTierUsed;
+    public string HardestAlgorithmUsed => _hardestAlgorithmUsed;
 
     // puzzle is a 9x9 grid where 0 represents a hole
     public SudokuDifficultyChecker(int[,] puzzle)
@@ -87,8 +89,9 @@ public class SudokuDifficultyChecker
     {
         { 1, "Easy (Naked/Hidden Singles Only)" },
         { 2, "Medium (Intersections / Pointing Pairs)" },
-        { 3, "Hard (Advanced Strategy / X-Wings)" },
-        { 4, "Expert/Diabolic (Requires Advanced Chains or Brute Force)" }
+        { 3, "Hard (Subsets / Box-Line Reduction)" },
+        { 4, "Expert (Advanced Strategy / X-Wings)" },
+        { 5, "Diabolical (Requires Advanced Chains or Brute Force)" }
     };
 
     // Iteratively solves the board strictly by tier level escalation.
@@ -121,49 +124,124 @@ public class SudokuDifficultyChecker
             }
 
             // Tier 1 Escalation
-            if (BeginnerAlgorithms.FindNakedSingles(_grid, _candidates) 
-                || BeginnerAlgorithms.FindHiddenSingles(_grid, _candidates))
+            if (BeginnerAlgorithms.FindNakedSingles(_grid, _candidates))
             {
-                _highestTierUsed = 1;
+                RecordAlgorithmUsage(1, "Naked Singles");
+                continue;
+            }
+            if (BeginnerAlgorithms.FindHiddenSingles(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(1, "Hidden Singles");
                 continue;
             }
 
             // Tier 2 Escalation (Intermediate)
-            if (IntermediateAlgorithms.FindPointingPairs(_grid, _candidates) 
-                || IntermediateAlgorithms.FindNakedPairs(_grid, _candidates) 
-                || IntermediateAlgorithms.FindHiddenPairs(_grid, _candidates) 
-                || IntermediateAlgorithms.FindBoxLineReduction(_grid, _candidates) 
-                || IntermediateAlgorithms.FindNakedTriples(_grid, _candidates) 
-                || IntermediateAlgorithms.FindHiddenTriples(_grid, _candidates)
-                || IntermediateAlgorithms.FindBugPlusOne(_grid, _candidates))
+            if (IntermediateAlgorithms.FindPointingPairs(_grid, _candidates))
             {
-
-                _highestTierUsed = Math.Max(_highestTierUsed, 2);
+                RecordAlgorithmUsage(2, "Pointing Pairs");
+                continue;
+            }
+            if (IntermediateAlgorithms.FindNakedPairs(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(2, "Naked Pairs");
                 continue;
             }
 
-            // Tier 3 Escalation (Advanced)
-            if (AdvancedAlgorithms.FindXWings(_grid, _candidates) 
-                || AdvancedAlgorithms.FindUniqueRectangles(_grid, _candidates) 
-                || AdvancedAlgorithms.FindYWings(_grid, _candidates) 
-                || AdvancedAlgorithms.FindWWings(_grid, _candidates) 
-                || AdvancedAlgorithms.FindRectangleElimination(_grid, _candidates)
-                || AdvancedAlgorithms.FindSimpleColouring(_grid, _candidates) 
-                || AdvancedAlgorithms.FindNakedQuads(_grid, _candidates) 
-                || AdvancedAlgorithms.FindHiddenQuads(_grid, _candidates)
-                || AdvancedAlgorithms.FindSwordfish(_grid, _candidates) 
-                || AdvancedAlgorithms.FindXYZWing(_grid, _candidates))
+            //Tier 3 Escalation (Intermediate-Advanced)
+            if (IntermediateAlgorithms.FindHiddenPairs(_grid, _candidates))
             {
-                _highestTierUsed = Math.Max(_highestTierUsed, 3);
+                RecordAlgorithmUsage(3, "Hidden Pairs");
+                continue;
+            }
+            if (IntermediateAlgorithms.FindBoxLineReduction(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(3, "Box/Line Reduction");
+                continue;
+            }
+            if (IntermediateAlgorithms.FindNakedTriples(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(3, "Naked Triples");
+                continue;
+            }
+            if (IntermediateAlgorithms.FindHiddenTriples(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(3, "Hidden Triples");
+                continue;
+            }
+            if (IntermediateAlgorithms.FindBugPlusOne(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(3, "BUG+1");
+                continue;
+            }
+
+            // Tier 4 Escalation (Advanced)
+            if (AdvancedAlgorithms.FindXWings(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(4, "X-Wing");
+                continue;
+            }
+            if (AdvancedAlgorithms.FindUniqueRectangles(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(4, "Unique Rectangle");
+                continue;
+            }
+            if (AdvancedAlgorithms.FindYWings(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(4, "Y-Wing");
+                continue;
+            }
+            if (AdvancedAlgorithms.FindWWings(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(4, "W-Wing");
+                continue;
+            }
+            if (AdvancedAlgorithms.FindRectangleElimination(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(4, "Rectangle Elimination");
+                continue;
+            }
+            if (AdvancedAlgorithms.FindSimpleColouring(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(4, "Simple Colouring");
+                continue;
+            }
+            if (AdvancedAlgorithms.FindNakedQuads(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(4, "Naked Quads");
+                continue;
+            }
+            if (AdvancedAlgorithms.FindHiddenQuads(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(4, "Hidden Quads");
+                continue;
+            }
+            if (AdvancedAlgorithms.FindSwordfish(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(4, "Swordfish");
+                continue;
+            }
+            if (AdvancedAlgorithms.FindXYZWing(_grid, _candidates))
+            {
+                RecordAlgorithmUsage(4, "XYZ-Wing");
                 continue;
             }
 
             // Tier 4 Default (If logic loop gets stuck, requires chains, guessing, or brute force)
-            _highestTierUsed = Math.Max(_highestTierUsed, 4);
+            RecordAlgorithmUsage(5, "Brute Force / Advanced Chains");
             break;
         }
 
         // Map highest tier activated to a final readable string
         return TierMapping[_highestTierUsed];
+    }
+
+    // Tracks the highest difficulty tier reached and the specific strategy that triggered it.
+    private void RecordAlgorithmUsage(int tier, string algorithmName)
+    {
+        if (tier >= _highestTierUsed)
+        {
+            _hardestAlgorithmUsed = algorithmName;
+        }
+        _highestTierUsed = Math.Max(_highestTierUsed, tier);
     }
 }

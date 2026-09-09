@@ -4,6 +4,13 @@ using System.Linq;
 
 namespace SudokuLib.GameLogic;
 
+// Result of grading an incomplete board's difficulty by stepping through solving algorithms.
+public record BoardDifficultyResult(
+    int BoardId,
+    bool IsSolved,
+    int DifficultyTier,
+    string DifficultyLabel,
+    string HardestAlgorithmUsed);
 
 public class SudokuGenerator
 {
@@ -162,6 +169,20 @@ public class SudokuGenerator
                 continue;
             }
         }
+    }
+
+    // Grades an incomplete board by solving it step by step, escalating through algorithm tiers.
+    public static BoardDifficultyResult CheckBoardDifficulty(int boardId, int[,] board)
+    {
+        var checker = new SudokuDifficultyChecker(board);
+        string difficultyLabel = checker.CheckDifficulty();
+
+        return new BoardDifficultyResult(
+            boardId,
+            checker.IsSolved,
+            checker.HighestTierUsed,
+            difficultyLabel,
+            checker.HardestAlgorithmUsed);
     }
 
     public static List<(int row, int col)> EmptyCellCoords(int[,] board)
