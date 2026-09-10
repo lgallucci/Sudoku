@@ -42,7 +42,7 @@ public static class PuzzleFileFormat
         int id = int.Parse(line.AsSpan(0, IdLength));
         string puzzle = line.Substring(IdLength, CellCount);
         string solution = line.Substring(IdLength + CellCount, CellCount);
-        string algorithm = line.Substring(IdLength + CellCount + CellCount, AlgorithmLength).TrimEnd();
+        string algorithm = line.Substring(IdLength + CellCount + CellCount).TrimEnd();
         return new PuzzleRecord(id, puzzle, solution, algorithm);
     }
 }

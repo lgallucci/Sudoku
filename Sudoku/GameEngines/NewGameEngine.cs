@@ -14,7 +14,7 @@ namespace Sudoku.GameEngines
         private static readonly string[] DifficultyLabels =
         {
             "Beginner",
-            "intermediate",
+            "Intermediate",
             "Hard",
             "Very Hard",
             "Extreme"
