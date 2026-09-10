@@ -38,7 +38,7 @@ public static class PuzzleFileFormat
 
     public static PuzzleRecord Deserialize(byte[] buffer)
     {
-        string line = Encoding.GetString(buffer);
+        string line = Encoding.GetString(buffer).TrimStart().TrimStart('\n');
         int id = int.Parse(line.AsSpan(0, IdLength));
         string puzzle = line.Substring(IdLength, CellCount);
         string solution = line.Substring(IdLength + CellCount, CellCount);
@@ -53,9 +53,12 @@ public sealed class PuzzleTierWriter : IDisposable
     private readonly FileStream _stream;
     private readonly object _lock = new();
 
-    public PuzzleTierWriter(string filePath)
+    // append=true resumes an existing tier file instead of truncating it; falls back to
+    // creating the file if it doesn't exist yet (e.g. first run, or a tier with no puzzles so far).
+    public PuzzleTierWriter(string filePath, bool append = false)
     {
-        _stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Read, bufferSize: 1 << 20);
+        FileMode mode = append && File.Exists(filePath) ? FileMode.Append : FileMode.Create;
+        _stream = new FileStream(filePath, mode, FileAccess.Write, FileShare.Read, bufferSize: 1 << 20);
     }
 
     public void Write(PuzzleRecord record)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using SudokuLib.GameLogic;
@@ -15,34 +16,35 @@ namespace Sudoku.GameEngines
         private readonly BoardRenderer _boardRenderer;
         private readonly Board _board;
         private readonly int[,] _solution;
-        private readonly List<(int, int, int)> _removedValues;
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
         
         public PlayingGameEngine(int difficulty)
         {
-            int[,] startingBoard;
-            if (difficulty == 1)
-            {
-                (_removedValues, startingBoard, _solution) = SudokuGenerator.NewStartingBoard(36);
-            }
-            else if (difficulty == 2)
-            {
-                (_removedValues, startingBoard, _solution) = SudokuGenerator.NewStartingBoard(46);
-            }
-            else if (difficulty == 3)
-            {
-                (_removedValues, startingBoard, _solution) = SudokuGenerator.NewStartingBoard(51);
-            }
-            else
-            {
-                (_removedValues, startingBoard, _solution) = SudokuGenerator.NewStartingBoard(55);
-            }
+            int tier = Math.Clamp(difficulty, 1, 5);
+            string puzzlePath = Path.Combine(AppContext.BaseDirectory, PuzzleFileFormat.GetTierFileName(tier));
+            using var reader = new PuzzleTierReader(puzzlePath);
+            PuzzleRecord puzzle = reader.GetRandom(new Random());
+
+            int[,] startingBoard = ParseBoard(puzzle.Puzzle);
+            _solution = ParseBoard(puzzle.Solution);
 
             _board = new Board(startingBoard);
 
             _view = new BoardViewState();
             _boardRenderer = new BoardRenderer();
+        }
+
+        private static int[,] ParseBoard(string serializedBoard)
+        {
+            int[,] board = new int[9, 9];
+            for (int index = 0; index < serializedBoard.Length; index++)
+            {
+                char value = serializedBoard[index];
+                board[index / 9, index % 9] = value == '.' ? 0 : value - '0';
+            }
+
+            return board;
         }
 
         public override void Draw(GraphicsEngine _graphicsEngine)

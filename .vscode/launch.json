@@ -16,6 +16,16 @@
         "request": "launch",
         "preLaunchTask": "dotnet: build",  // Optional
         "projectPath": "${workspaceFolder}/Sudoku/Sudoku.csproj"
+      },       
+      {
+        "name": "Import",
+        "type": "coreclr",
+        "request": "launch",
+        "preLaunchTask": "dotnet: build",  // Optional
+        "program": "${workspaceFolder}/SudokuPuzzleImporter/bin/Debug/net10.0/SudokuPuzzleImporter.dll",
+        "args": ["/mnt/Files/GIT/Sudoku/sudoku-3m.csv", "/mnt/Files/GIT/Sudoku"],
+        "cwd": "${workspaceFolder}/SudokuPuzzleImporter",
+        "console": "integratedTerminal"
       }
 
     ]

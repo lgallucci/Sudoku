@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -12,10 +13,17 @@ namespace SudokuPuzzleImporter;
 // SudokuGenerator.CheckBoardDifficulty (ignoring the CSV's own difficulty column), and
 // writes each puzzle into a fixed-width file bucketed by our own difficulty tier so it
 // can later be picked at random without loading the whole tier file into memory.
+//
+// The CSV is processed in batches. After each batch is fully written, the number of rows
+// consumed so far is saved to a progress file in the output directory; re-running the
+// importer with the same output directory resumes right after the last completed batch
+// instead of starting over (and appends to the existing tier files rather than truncating them).
 internal static class Program
 {
     private const int MinTier = 1;
     private const int MaxTier = 5;
+    private const int BatchSize = 20_000;
+    private const string ProgressFileName = "progress.txt";
 
     private static int Main(string[] args)
     {
@@ -36,11 +44,15 @@ internal static class Program
 
         Directory.CreateDirectory(outputDir);
 
+        string progressPath = Path.Combine(outputDir, ProgressFileName);
+        long resumeRows = ReadProgress(progressPath);
+        bool resuming = resumeRows > 0;
+
         var writers = new PuzzleTierWriter[MaxTier + 1];
         for (int tier = MinTier; tier <= MaxTier; tier++)
         {
             string path = Path.Combine(outputDir, PuzzleFileFormat.GetTierFileName(tier));
-            writers[tier] = new PuzzleTierWriter(path);
+            writers[tier] = new PuzzleTierWriter(path, append: resuming);
         }
 
         long processed = 0;
@@ -48,39 +60,52 @@ internal static class Program
         var tierCounts = new long[MaxTier + 1];
         var stopwatch = Stopwatch.StartNew();
 
+        if (resuming)
+        {
+            Console.WriteLine($"Resuming after row {resumeRows:N0} (from {progressPath}).");
+        }
+
         try
         {
-            // File.ReadLines streams the file lazily; Partitioner lets Parallel.ForEach
-            // consume that stream across threads without ever materializing all 3M rows.
-            var lines = System.Linq.Enumerable.Skip(File.ReadLines(csvPath), 1);
-            var partitioner = System.Collections.Concurrent.Partitioner.Create(lines, EnumerablePartitionerOptions.NoBuffering);
+            // File.ReadLines streams the file lazily; skip the header plus any rows already
+            // completed in a previous run, then process the remainder in fixed-size batches so
+            // progress can only ever be saved at a point where every row in it was fully written.
+            var rows = System.Linq.Enumerable.Skip(File.ReadLines(csvPath), 1 + (int)resumeRows);
 
-            Parallel.ForEach(partitioner, line =>
+            foreach (List<string> batch in Batch(rows, BatchSize))
             {
-                if (string.IsNullOrWhiteSpace(line))
+                var partitioner = System.Collections.Concurrent.Partitioner.Create(batch, EnumerablePartitionerOptions.NoBuffering);
+
+                Parallel.ForEach(partitioner, line =>
                 {
-                    return;
-                }
+                    if (string.IsNullOrWhiteSpace(line))
+                    {
+                        return;
+                    }
 
-                if (!TryParseRow(line, out int id, out string puzzle, out string solution))
-                {
-                    Interlocked.Increment(ref skipped);
-                    return;
-                }
+                    if (!TryParseRow(line, out int id, out string puzzle, out string solution))
+                    {
+                        Interlocked.Increment(ref skipped);
+                        return;
+                    }
 
-                int[,] board = ToBoard(puzzle);
-                BoardDifficultyResult result = SudokuGenerator.CheckBoardDifficulty(id, board);
-                int tier = Math.Clamp(result.DifficultyTier, MinTier, MaxTier);
+                    int[,] board = ToBoard(puzzle);
+                    BoardDifficultyResult result = SudokuGenerator.CheckBoardDifficulty(id, board);
+                    int tier = Math.Clamp(result.DifficultyTier, MinTier, MaxTier);
 
-                writers[tier].Write(new PuzzleRecord(id, puzzle, solution, result.HardestAlgorithmUsed));
-                Interlocked.Increment(ref tierCounts[tier]);
+                    writers[tier].Write(new PuzzleRecord(id, puzzle, solution, result.HardestAlgorithmUsed));
+                    Interlocked.Increment(ref tierCounts[tier]);
 
-                long done = Interlocked.Increment(ref processed);
-                if (done % 50_000 == 0)
-                {
-                    Console.WriteLine($"Processed {done:N0} puzzles ({skipped:N0} skipped) in {stopwatch.Elapsed}...");
-                }
-            });
+                    long done = Interlocked.Increment(ref processed);
+                    if (done % 50_000 == 0)
+                    {
+                        Console.WriteLine($"Processed {done:N0} puzzles ({skipped:N0} skipped) in {stopwatch.Elapsed}...");
+                    }
+                });
+
+                resumeRows += batch.Count;
+                WriteProgress(progressPath, resumeRows);
+            }
         }
         finally
         {
@@ -134,5 +159,42 @@ internal static class Program
             board[i / 9, i % 9] = value;
         }
         return board;
+    }
+
+    private static IEnumerable<List<string>> Batch(IEnumerable<string> source, int size)
+    {
+        var batch = new List<string>(size);
+        foreach (string item in source)
+        {
+            batch.Add(item);
+            if (batch.Count == size)
+            {
+                yield return batch;
+                batch = new List<string>(size);
+            }
+        }
+
+        if (batch.Count > 0)
+        {
+            yield return batch;
+        }
+    }
+
+    private static long ReadProgress(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return 0;
+        }
+
+        return long.TryParse(File.ReadAllText(path).Trim(), out long rows) ? rows : 0;
+    }
+
+    // Write-to-temp-then-move keeps the progress file from ever being read half-written.
+    private static void WriteProgress(string path, long rowsProcessed)
+    {
+        string tempPath = path + ".tmp";
+        File.WriteAllText(tempPath, rowsProcessed.ToString());
+        File.Move(tempPath, path, overwrite: true);
     }
 }

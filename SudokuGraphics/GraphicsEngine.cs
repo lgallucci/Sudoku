@@ -93,5 +93,15 @@ namespace SudokuGraphics
             var fontSize = Art.NewGameFont.MeasureString(text);
             SpriteBatch.DrawString(Art.NewGameFont, text, new Vector2((ScreenSize.X / 2) - fontSize.X / 2, (ScreenSize.Y / 2) - fontSize.Y / 2), Color.DeepPink);
         }
+
+        public void DrawString(string text, Vector2 position, Color color)
+        {
+            SpriteBatch.DrawString(Art.NewGameFont, text, position, color);
+        }
+
+        public void FillRectangle(Rectangle rectangle, Color color)
+        {
+            SpriteBatch.Draw(Art.Pixel, rectangle, color);
+        }
     }
 }
