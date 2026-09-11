@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -18,6 +19,9 @@ namespace Sudoku.GameEngines
         private readonly Board _board;
         private readonly int[,] _solution;
         private readonly string _hardestAlgorithm;
+        private readonly Button _hintButton;
+        private readonly Button _fillNotesButton;
+        private readonly Stopwatch _gameTimer;
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
         private bool _showHint;
@@ -37,6 +41,9 @@ namespace Sudoku.GameEngines
 
             _view = new BoardViewState();
             _boardRenderer = new BoardRenderer();
+            _hintButton = new Button(GetHintButtonRectangle(), "Show Hint", Theme.ButtonPrimary, () => Art.NoteFont);
+            _fillNotesButton = new Button(GetFillNotesButtonRectangle(), "Fill Notes", Theme.ButtonPrimary, () => Art.NoteFont);
+            _gameTimer = Stopwatch.StartNew();
         }
 
         private static int[,] ParseBoard(string serializedBoard)
@@ -53,7 +60,7 @@ namespace Sudoku.GameEngines
 
         public override void Draw(GraphicsEngine graphicsEngine)
         {
-            _boardRenderer.RenderBoard(_board, _view, graphicsEngine.Context);
+            _boardRenderer.RenderBoard(_board, _view, graphicsEngine.Context, _gameTimer.Elapsed);
             DrawHintButton(graphicsEngine);
             DrawFillNotesButton(graphicsEngine);
         }
@@ -63,9 +70,7 @@ namespace Sudoku.GameEngines
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();
 
-            Mouse.SetCursor(IsHintButtonClick(mouseState.Position) || IsFillNotesButtonClick(mouseState.Position)
-                ? MouseCursor.Hand
-                : MouseCursor.Arrow);
+            UpdateCursor(mouseState.Position);
 
             if (!_view.IsSolved)
             {
@@ -103,29 +108,38 @@ namespace Sudoku.GameEngines
 
         private Rectangle GetHintButtonRectangle()
         {
-            return new Rectangle(420, 20, 125, 38);
+            return new Rectangle(450, 20, 125, 38);
         }
 
         private Rectangle GetFillNotesButtonRectangle()
         {
-            return new Rectangle(190, 750, 220, 38);
+            return new Rectangle(20, 20, 125, 38);
+        }
+
+        private void UpdateCursor(Point position)
+        {
+            if (_hintButton.Contains(position))
+            {
+                _hintButton.UpdateCursor(position);
+                return;
+            }
+
+            _fillNotesButton.UpdateCursor(position);
         }
 
         private bool IsHintButtonClick(Point position)
         {
-            return GetHintButtonRectangle().Contains(position);
+            return _hintButton.Contains(position);
         }
 
         private bool IsFillNotesButtonClick(Point position)
         {
-            return GetFillNotesButtonRectangle().Contains(position);
+            return _fillNotesButton.Contains(position);
         }
 
         private void DrawHintButton(GraphicsEngine graphicsEngine)
         {
-            var button = GetHintButtonRectangle();
-            graphicsEngine.FillRectangle(button, Theme.ButtonPrimary);
-            graphicsEngine.SpriteBatch.DrawString(Art.NoteFont, "Show Hint", new Vector2(button.X + 14, button.Y + 9), Theme.TextPrimary);
+            _hintButton.Draw(graphicsEngine);
             
             if (_showHint)
             {
@@ -138,9 +152,7 @@ namespace Sudoku.GameEngines
 
         private void DrawFillNotesButton(GraphicsEngine graphicsEngine)
         {
-            var button = GetFillNotesButtonRectangle();
-            graphicsEngine.FillRectangle(button, Theme.ButtonPrimary);
-            graphicsEngine.SpriteBatch.DrawString(Art.NoteFont, "Fill Notes", new Vector2(button.X + 36, button.Y + 9), Theme.TextPrimary);
+            _fillNotesButton.Draw(graphicsEngine);
         }
 
         private void FillAllNotes()
@@ -438,6 +450,7 @@ namespace Sudoku.GameEngines
                 }
             }
             _view.IsSolved = true;
+            _gameTimer.Stop();
         }
     }
 }

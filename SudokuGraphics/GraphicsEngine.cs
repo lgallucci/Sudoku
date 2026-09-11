@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -55,6 +51,7 @@ namespace SudokuGraphics
         public void SetScreenSize(int screenWidth, int screenHeight)
         {
             ScreenSize = new Point(screenWidth, screenHeight);
+            Context.ScreenSize = ScreenSize;
 
             GraphicsDeviceManager.PreferredBackBufferWidth = screenWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = screenHeight;

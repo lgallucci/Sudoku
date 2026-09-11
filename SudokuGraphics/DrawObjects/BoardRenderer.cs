@@ -1,3 +1,4 @@
+using System;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
 using SudokuLib.GameObjects;
@@ -11,7 +12,7 @@ namespace SudokuGraphics.DrawObjects
         private readonly NoteGraphics _noteGraphics = new NoteGraphics();
         private readonly PileGraphics _pileGraphics = new PileGraphics();
 
-        public void RenderBoard(Board board, BoardViewState boardState, RenderContext context)
+        public void RenderBoard(Board board, BoardViewState boardState, RenderContext context, TimeSpan elapsedTime)
         {
             BindContext(context);
 
@@ -40,9 +41,21 @@ namespace SudokuGraphics.DrawObjects
 
             if (boardState.IsSolved)
             {
-                var winText = "You win! Click to play again...";
+                var winText = $"You win! Time: {elapsedTime:mm\\:ss}";
                 var fontSize = Art.NewGameFont.MeasureString(winText);
-                context.SpriteBatch.DrawString(Art.NewGameFont, winText, new Vector2(20, 20), Theme.WinText);
+                const int horizontalPadding = 24;
+                const int verticalPadding = 16;
+                var box = new Rectangle(
+                    (int)((context.ScreenSize.X - fontSize.X) / 2) - horizontalPadding,
+                    (int)((context.ScreenSize.Y - fontSize.Y) / 2) - verticalPadding,
+                    (int)fontSize.X + horizontalPadding * 2,
+                    (int)fontSize.Y + verticalPadding * 2);
+                var textPosition = new Vector2(
+                    box.X + horizontalPadding,
+                    box.Y + verticalPadding);
+
+                context.SpriteBatch.Draw(Art.Pixel, box, Theme.ButtonPrimary);
+                context.SpriteBatch.DrawString(Art.NewGameFont, winText, textPosition, Theme.TextPrimary);
             }
         }
 

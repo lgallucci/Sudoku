@@ -19,54 +19,69 @@ namespace Sudoku.GameEngines
             "Very Hard",
             "Extreme"
         };
+        private readonly Button[] _difficultyButtons;
+        private readonly Button _newGameButton;
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
+
+        public NewGameEngine()
+        {
+            int centerX = 300;
+            int optionsY = 190;
+            _difficultyButtons = new Button[LastDifficulty - FirstDifficulty + 1];
+
+            for (int difficulty = FirstDifficulty; difficulty <= LastDifficulty; difficulty++)
+            {
+                _difficultyButtons[difficulty - FirstDifficulty] = new Button(
+                    GetDifficultyRectangle(centerX, optionsY, difficulty),
+                    DifficultyLabels[difficulty - FirstDifficulty],
+                    Theme.ButtonSecondary,
+                    () => Art.NewGameFont);
+            }
+
+            _newGameButton = new Button(
+                GetNewGameRectangle(centerX, optionsY),
+                "New Game",
+                Theme.ButtonPrimary,
+                () => Art.NewGameFont);
+        }
 
         public override void Draw(GraphicsEngine _graphicsEngine)
         {
             int centerX = _graphicsEngine.ScreenSize.X / 2;
             int titleY = 70;
-            int optionsY = 190;
 
-            DrawCentered(_graphicsEngine, "Sudoku", titleY, Theme.HighlightColor);
+            DrawCentered(_graphicsEngine, "Sudoku", titleY, Theme.TextAccent);
             DrawCentered(_graphicsEngine, "Choose difficulty", 135, Theme.TextPrimary);
 
             for (int difficulty = FirstDifficulty; difficulty <= LastDifficulty; difficulty++)
             {
-                Rectangle option = GetDifficultyRectangle(centerX, optionsY, difficulty);
-                Color optionColor = difficulty == _selectedDifficulty ? Theme.HighlightColor : Theme.ButtonSecondary;
-                _graphicsEngine.FillRectangle(option, optionColor);
-                DrawCentered(_graphicsEngine, DifficultyLabels[difficulty - FirstDifficulty], option.Y + 4, Theme.TextPrimary);
+                Button button = _difficultyButtons[difficulty - FirstDifficulty];
+                button.Color = difficulty == _selectedDifficulty ? Theme.HighlightColor : Theme.ButtonSecondary;
+                button.Draw(_graphicsEngine);
             }
 
-            Rectangle newGameButton = GetNewGameRectangle(centerX, optionsY);
-            _graphicsEngine.FillRectangle(newGameButton, Theme.ButtonPrimary);
-            DrawCentered(_graphicsEngine, "New Game", newGameButton.Y + 4, Theme.TextPrimary);
+            _newGameButton.Draw(_graphicsEngine);
         }
 
         public override void Update(GameTime gameTime, ref GameStateData _gameStateData)
         {
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();
-            int centerX = 300;
-            int optionsY = 190;
-
-            Mouse.SetCursor(IsButtonHovered(mouseState.Position, centerX, optionsY)
-                ? MouseCursor.Hand
-                : MouseCursor.Arrow);
+            UpdateCursor(mouseState.Position);
 
             if (IsNewlyPressed(mouseState.LeftButton, _previousMouseState.LeftButton))
             {
                 for (int difficulty = FirstDifficulty; difficulty <= LastDifficulty; difficulty++)
                 {
-                    if (GetDifficultyRectangle(centerX, optionsY, difficulty).Contains(mouseState.Position))
+                    if (_difficultyButtons[difficulty - FirstDifficulty].Contains(mouseState.Position))
                     {
                         _selectedDifficulty = difficulty;
                         break;
                     }
                 }
 
-                if (GetNewGameRectangle(centerX, optionsY).Contains(mouseState.Position))
+                if (_newGameButton.Contains(mouseState.Position))
                 {
                     StartGame(ref _gameStateData);
                 }
@@ -104,17 +119,18 @@ namespace Sudoku.GameEngines
             return new Rectangle(centerX - 180, y, 360, DifficultyOptionHeight);
         }
 
-        private static bool IsButtonHovered(Point position, int centerX, int optionsY)
+        private void UpdateCursor(Point position)
         {
-            for (int difficulty = FirstDifficulty; difficulty <= LastDifficulty; difficulty++)
+            foreach (Button button in _difficultyButtons)
             {
-                if (GetDifficultyRectangle(centerX, optionsY, difficulty).Contains(position))
+                if (button.Contains(position))
                 {
-                    return true;
+                    button.UpdateCursor(position);
+                    return;
                 }
             }
 
-            return GetNewGameRectangle(centerX, optionsY).Contains(position);
+            _newGameButton.UpdateCursor(position);
         }
 
         private static void DrawCentered(GraphicsEngine graphics, string text, int y, Color color)

@@ -26,7 +26,7 @@ namespace Sudoku
         private GameEngine _gameEngine;
         private GameStateData _gameStateData;
         int _screenWidth = 600;
-        int _screenHeight = 800;
+        int _screenHeight = 750;
         
         public SudokuGame()
         {

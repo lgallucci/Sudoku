@@ -53,9 +53,9 @@ namespace SudokuGraphics.DrawObjects
                 return Theme.HighlightColor;
             else
                 if (cell.IsGiven)
-                    return Theme.NumberGiven;
+                    return Theme.TextSecondary;
                 else
-                    return Theme.NumberInput;
+                    return Theme.TextAccent;
         }
     }
 }
