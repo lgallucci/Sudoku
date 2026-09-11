@@ -7,6 +7,7 @@ using SudokuLib.GameLogic;
 using SudokuGraphics;
 using SudokuGraphics.DrawObjects;
 using SudokuLib.GameObjects;
+using FontStashSharp;
 
 namespace Sudoku.GameEngines
 {
@@ -16,8 +17,10 @@ namespace Sudoku.GameEngines
         private readonly BoardRenderer _boardRenderer;
         private readonly Board _board;
         private readonly int[,] _solution;
+        private readonly string _hardestAlgorithm;
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
+        private bool _showHint;
         
         public PlayingGameEngine(int difficulty)
         {
@@ -28,6 +31,7 @@ namespace Sudoku.GameEngines
 
             int[,] startingBoard = ParseBoard(puzzle.Puzzle);
             _solution = ParseBoard(puzzle.Solution);
+            _hardestAlgorithm = puzzle.HardestAlgorithm;
 
             _board = new Board(startingBoard);
 
@@ -47,9 +51,11 @@ namespace Sudoku.GameEngines
             return board;
         }
 
-        public override void Draw(GraphicsEngine _graphicsEngine)
+        public override void Draw(GraphicsEngine graphicsEngine)
         {
-            _boardRenderer.RenderBoard(_board, _view, _graphicsEngine.Context);
+            _boardRenderer.RenderBoard(_board, _view, graphicsEngine.Context);
+            DrawHintButton(graphicsEngine);
+            DrawFillNotesButton(graphicsEngine);
         }
 
         public override void Update(GameTime gameTime, ref GameStateData _gameStateData)
@@ -57,21 +63,149 @@ namespace Sudoku.GameEngines
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();
 
+            Mouse.SetCursor(IsHintButtonClick(mouseState.Position) || IsFillNotesButtonClick(mouseState.Position)
+                ? MouseCursor.Hand
+                : MouseCursor.Arrow);
+
             if (!_view.IsSolved)
             {
                 if (mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released)
                 {
-                    SelectCellAt(mouseState.X, mouseState.Y);
+                    if (IsHintButtonClick(mouseState.Position))
+                    {
+                        _showHint = true;
+                    }
+                    else if (IsFillNotesButtonClick(mouseState.Position))
+                    {
+                        FillAllNotes();
+                    }
+                    else
+                    {
+                        SelectCellAt(mouseState.X, mouseState.Y);
+                    }
                 }
 
                 HandleArrowKeys(keyboardState);
                 HandleKeyboardInput(keyboardState);
                 CheckForSolved();
             }
-
+            else
+            {
+                if (mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released)
+                {
+                    _gameStateData.CurrentState = GameState.NewGame;
+                }
+            }
 
             _previousMouseState = mouseState;
             _previousKeyboardState = keyboardState;
+        }
+
+        private Rectangle GetHintButtonRectangle()
+        {
+            return new Rectangle(420, 20, 125, 38);
+        }
+
+        private Rectangle GetFillNotesButtonRectangle()
+        {
+            return new Rectangle(190, 750, 220, 38);
+        }
+
+        private bool IsHintButtonClick(Point position)
+        {
+            return GetHintButtonRectangle().Contains(position);
+        }
+
+        private bool IsFillNotesButtonClick(Point position)
+        {
+            return GetFillNotesButtonRectangle().Contains(position);
+        }
+
+        private void DrawHintButton(GraphicsEngine graphicsEngine)
+        {
+            var button = GetHintButtonRectangle();
+            graphicsEngine.FillRectangle(button, Theme.ButtonPrimary);
+            graphicsEngine.SpriteBatch.DrawString(Art.NoteFont, "Show Hint", new Vector2(button.X + 14, button.Y + 9), Theme.TextPrimary);
+            
+            if (_showHint)
+            {
+                var hintText = $"Hint: {_hardestAlgorithm}";
+                var textSize = Art.NoteFont.MeasureString(hintText);
+                var hintPosition = new Vector2(Math.Max(20, graphicsEngine.ScreenSize.X - textSize.X - 20), 68);
+                graphicsEngine.SpriteBatch.DrawString(Art.NoteFont, hintText, hintPosition, Theme.TextPrimary);
+            }
+        }
+
+        private void DrawFillNotesButton(GraphicsEngine graphicsEngine)
+        {
+            var button = GetFillNotesButtonRectangle();
+            graphicsEngine.FillRectangle(button, Theme.ButtonPrimary);
+            graphicsEngine.SpriteBatch.DrawString(Art.NoteFont, "Fill Notes", new Vector2(button.X + 36, button.Y + 9), Theme.TextPrimary);
+        }
+
+        private void FillAllNotes()
+        {
+            for (int row = 0; row < 9; row++)
+            {
+                for (int col = 0; col < 9; col++)
+                {
+                    var cell = _board.GetCell(row, col);
+                    if (cell.Value != 0)
+                    {
+                        continue;
+                    }
+
+                    for (int noteRow = 0; noteRow < 3; noteRow++)
+                    {
+                        for (int noteCol = 0; noteCol < 3; noteCol++)
+                        {
+                            cell.Notes[noteRow, noteCol].Value = 0;
+                            cell.Notes[noteRow, noteCol].IsNumberHighlighted = false;
+                            cell.Notes[noteRow, noteCol].IsNumberInvalid = false;
+                        }
+                    }
+
+                    for (int value = 1; value <= 9; value++)
+                    {
+                        if (IsValueAllowed(row, col, value))
+                        {
+                            var note = cell.Notes[(value - 1) / 3, (value - 1) % 3];
+                            note.Value = value;
+                        }
+                    }
+                }
+            }
+        }
+
+        private bool IsValueAllowed(int row, int col, int value)
+        {
+            for (int index = 0; index < 9; index++)
+            {
+                if (index != col && _board.GetCell(row, index).Value == value)
+                {
+                    return false;
+                }
+
+                if (index != row && _board.GetCell(index, col).Value == value)
+                {
+                    return false;
+                }
+            }
+
+            int startRow = (row / 3) * 3;
+            int startCol = (col / 3) * 3;
+            for (int r = startRow; r < startRow + 3; r++)
+            {
+                for (int c = startCol; c < startCol + 3; c++)
+                {
+                    if ((r != row || c != col) && _board.GetCell(r, c).Value == value)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         private void SelectCellAt(int x, int y)
@@ -267,15 +401,28 @@ namespace Sudoku.GameEngines
             return 0;
         }
 
-        private static void ToggleNote(Cell cell, int value)
+        private void ToggleNote(Cell cell, int value)
         {
             var note = cell.Notes[(value - 1) / 3, (value - 1) % 3];
             note.Value = note.Value == value ? 0 : value;
+
+            ExecuteOnRowAndColumn(cell, (row, col) =>
+            {
+                var matchingCell = _board.GetCell(row, col);
+                if (matchingCell.Value == value)
+                {
+                    note.IsNumberInvalid = true;
+                }
+            });
+
         }
 
         private static void ClearNote(Cell cell, int value)
         {
-            cell.Notes[(value - 1) / 3, (value - 1) % 3].Value = 0;
+            var note = cell.Notes[(value - 1) / 3, (value - 1) % 3];
+            note.IsNumberInvalid = false;
+            note.Value = 0;
+            note.IsNumberHighlighted = false;
         }
 
         private void CheckForSolved()

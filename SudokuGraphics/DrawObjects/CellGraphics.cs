@@ -33,29 +33,29 @@ namespace SudokuGraphics.DrawObjects
              if (cell.IsGiven)
              {
                 if (cell.IsSelected)
-                    return Color.SlateBlue;
+                    return Theme.TileGivenSelected;
                 else if (cell.IsHighlighted)
-                    return Color.PaleGoldenrod;
+                    return Theme.TileGivenHighlighted;
                 else
-                    return Color.LightGray;
+                    return Theme.TileGiven;
              }
             else if (cell.IsSelected)
-                return Color.LightBlue;
+                return Theme.TileEmptySelected;
             else if (cell.IsHighlighted)
-                return Color.LightGoldenrodYellow;
+                return Theme.TileEmptyHighlighted;
             else
-                return Color.White;
+                return Theme.TileEmpty;
         }
 
         private Color GetFontColor(Cell cell)
         {
             if (cell.IsNumberHighlighted)
-                return Color.Tomato;
+                return Theme.HighlightColor;
             else
                 if (cell.IsGiven)
-                    return Color.Black;
+                    return Theme.NumberGiven;
                 else
-                    return Color.DarkBlue;
+                    return Theme.NumberInput;
         }
     }
 }

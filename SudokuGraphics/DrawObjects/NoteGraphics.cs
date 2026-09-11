@@ -1,5 +1,6 @@
 using System;
 using FontStashSharp;
+using FontStashSharp.RichText;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SudokuLib.GameObjects;
@@ -26,16 +27,23 @@ namespace SudokuGraphics.DrawObjects
                     boardState.GetCellY(cell.Row) + noteRow * noteSize + (noteSize - textSize.Y) / 2
                 );
 
-                spriteBatch.DrawString(font, noteString, position, GetFontColor(cell, note));
+                var layout = new RichTextLayout()
+                {
+                    Font = font,
+                    Text = note.IsNumberInvalid ? "/ts" + noteString + "/td" : noteString,
+                };
+                layout.Draw(spriteBatch, position, GetFontColor(cell, note));
             }
         }
 
         private Color GetFontColor(Cell cell, Note note)
         {
+            if (note.IsNumberInvalid)
+                return Theme.InvalidColor;
             if (note.IsNumberHighlighted)
-                return Color.Tomato;
+                return Theme.HighlightColor;
             else
-                return Color.Gray;
+                return Theme.NoteNormal;
         }
     }
 }

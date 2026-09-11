@@ -16,7 +16,7 @@ namespace SudokuGraphics
         public GraphicsDevice Device { get; private set; }
         public SpriteBatch SpriteBatch { get; private set; }
         public RenderContext Context { get; private set; }
-        public Color BaseColor { get; set; } = new Color(125, 125, 125);
+        public Color BaseColor { get; set; } = Theme.Background;
         private RenderTarget2D _sceneRenderTarget;
 
         public GraphicsEngine(Game game)
@@ -83,7 +83,7 @@ namespace SudokuGraphics
             Device.Clear(Color.Transparent);
 
             SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-            SpriteBatch.Draw(_sceneRenderTarget, Vector2.Zero, Color.White);
+            SpriteBatch.Draw(_sceneRenderTarget, Vector2.Zero, Theme.RenderTargetTint);
             SpriteBatch.End();
         }
 
@@ -91,7 +91,7 @@ namespace SudokuGraphics
         public void DrawString(string text)
         {
             var fontSize = Art.NewGameFont.MeasureString(text);
-            SpriteBatch.DrawString(Art.NewGameFont, text, new Vector2((ScreenSize.X / 2) - fontSize.X / 2, (ScreenSize.Y / 2) - fontSize.Y / 2), Color.DeepPink);
+            SpriteBatch.DrawString(Art.NewGameFont, text, new Vector2((ScreenSize.X / 2) - fontSize.X / 2, (ScreenSize.Y / 2) - fontSize.Y / 2), Theme.ScreenAccent);
         }
 
         public void DrawString(string text, Vector2 position, Color color)

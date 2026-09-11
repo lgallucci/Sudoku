@@ -6,6 +6,7 @@ namespace SudokuLib.GameObjects
         public bool IsNumberHighlighted { get; set; }
         public int Row { get; private set; }
         public int Col { get; private set; }
+        public bool IsNumberInvalid { get; set; }
 
         public Note(int row, int col)
         {
@@ -13,6 +14,7 @@ namespace SudokuLib.GameObjects
             Col = col;
             Value = 0;
             IsNumberHighlighted = false;
+            IsNumberInvalid = false;
         }
     }
 }

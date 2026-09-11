@@ -10,7 +10,7 @@ namespace SudokuGraphics
         public int TopLeftX { get; internal set; } = 20;
         public int TopLeftY { get; internal set; } = 100;
         public int BorderThickness { get; internal set; } = 4;
-        public Color BorderColor { get; internal set; } = Color.Black;
+        public Color BorderColor { get; internal set; } = Theme.BoardBorder;
         public int SelectedValue { get; set; }
         public Cell SelectedCell { get; set; }
         public bool IsSolved { get; set; }

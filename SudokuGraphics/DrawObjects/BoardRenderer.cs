@@ -42,7 +42,7 @@ namespace SudokuGraphics.DrawObjects
             {
                 var winText = "You win! Click to play again...";
                 var fontSize = Art.NewGameFont.MeasureString(winText);
-                context.SpriteBatch.DrawString(Art.NewGameFont, winText, new Vector2(20, 20), Color.GreenYellow);
+                context.SpriteBatch.DrawString(Art.NewGameFont, winText, new Vector2(20, 20), Theme.WinText);
             }
         }
 
