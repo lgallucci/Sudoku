@@ -21,8 +21,13 @@ namespace SudokuGraphics.DrawObjects
             {
                 int remaining = pile.Values[value];
                 bool isUsedUp = remaining <= 0;
-                var backgroundColor = isUsedUp ? Theme.PileUsedUpBackground : Theme.PileAvailableBackground;
-                var textColor = isUsedUp ? Theme.PileUsedUpText : Theme.PileAvailableText;
+                bool isHighlighted = boardState.SelectedValue == value;
+                var backgroundColor = isHighlighted
+                    ? Theme.HighlightColor
+                    : isUsedUp ? Theme.PileUsedUpBackground : Theme.PileAvailableBackground;
+                var textColor = isHighlighted
+                    ? Theme.TextPrimary
+                    : isUsedUp ? Theme.PileUsedUpText : Theme.PileAvailableText;
 
                 int slotX = boardState.TopLeftX + (value - 1) * slotWidth + (slotWidth - squareSize) / 2;
                 spriteBatch.Draw(Art.Pixel, new Rectangle(slotX, y, squareSize, squareSize), backgroundColor);

@@ -21,10 +21,12 @@ namespace Sudoku.GameEngines
         private readonly string _hardestAlgorithm;
         private readonly Button _hintButton;
         private readonly Button _fillNotesButton;
+        private readonly Button _newGameButton;
         private readonly Stopwatch _gameTimer;
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
         private bool _showHint;
+        private bool _showNewGameConfirmation;
         
         public PlayingGameEngine(int difficulty)
         {
@@ -43,6 +45,7 @@ namespace Sudoku.GameEngines
             _boardRenderer = new BoardRenderer();
             _hintButton = new Button(GetHintButtonRectangle(), "Show Hint", Theme.ButtonPrimary, () => Art.NoteFont);
             _fillNotesButton = new Button(GetFillNotesButtonRectangle(), "Fill Notes", Theme.ButtonPrimary, () => Art.NoteFont);
+            _newGameButton = new Button(GetNewGameButtonRectangle(), "New Game", Theme.ButtonPrimary, () => Art.NoteFont);
             _gameTimer = Stopwatch.StartNew();
         }
 
@@ -63,6 +66,11 @@ namespace Sudoku.GameEngines
             _boardRenderer.RenderBoard(_board, _view, graphicsEngine.Context, _gameTimer.Elapsed);
             DrawHintButton(graphicsEngine);
             DrawFillNotesButton(graphicsEngine);
+            DrawNewGameButton(graphicsEngine);
+            if (_showNewGameConfirmation)
+            {
+                DrawNewGameConfirmation(graphicsEngine);
+            }
         }
 
         public override void Update(GameTime gameTime, ref GameStateData _gameStateData)
@@ -71,6 +79,29 @@ namespace Sudoku.GameEngines
             var keyboardState = Keyboard.GetState();
 
             UpdateCursor(mouseState.Position);
+
+            if (IsNewlyPressed(mouseState.LeftButton, _previousMouseState.LeftButton))
+            {
+                if (_showNewGameConfirmation)
+                {
+                    HandleNewGameConfirmation(mouseState.Position, ref _gameStateData);
+                }
+                else if (_newGameButton.Contains(mouseState.Position))
+                {
+                    _showNewGameConfirmation = true;
+                }
+                else if (_view.IsSolved)
+                {
+                    _gameStateData.CurrentState = GameState.NewGame;
+                }
+            }
+
+            if (_showNewGameConfirmation)
+            {
+                _previousMouseState = mouseState;
+                _previousKeyboardState = keyboardState;
+                return;
+            }
 
             if (!_view.IsSolved)
             {
@@ -84,6 +115,9 @@ namespace Sudoku.GameEngines
                     {
                         FillAllNotes();
                     }
+                    else if (TrySelectPileValue(mouseState.Position))
+                    {
+                    }
                     else
                     {
                         SelectCellAt(mouseState.X, mouseState.Y);
@@ -94,14 +128,6 @@ namespace Sudoku.GameEngines
                 HandleKeyboardInput(keyboardState);
                 CheckForSolved();
             }
-            else
-            {
-                if (mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released)
-                {
-                    _gameStateData.CurrentState = GameState.NewGame;
-                }
-            }
-
             _previousMouseState = mouseState;
             _previousKeyboardState = keyboardState;
         }
@@ -113,18 +139,47 @@ namespace Sudoku.GameEngines
 
         private Rectangle GetFillNotesButtonRectangle()
         {
+            return new Rectangle(175, 20, 125, 38);
+        }
+
+        private Rectangle GetNewGameButtonRectangle()
+        {
             return new Rectangle(20, 20, 125, 38);
+        }
+
+        private Rectangle GetConfirmationYesButtonRectangle()
+        {
+            return new Rectangle(220, 430, 75, 38);
+        }
+
+        private Rectangle GetConfirmationNoButtonRectangle()
+        {
+            return new Rectangle(305, 430, 75, 38);
         }
 
         private void UpdateCursor(Point position)
         {
+            if (_showNewGameConfirmation)
+            {
+                Mouse.SetCursor(GetConfirmationYesButtonRectangle().Contains(position) || GetConfirmationNoButtonRectangle().Contains(position)
+                    ? MouseCursor.Hand
+                    : MouseCursor.Arrow);
+                return;
+            }
+
             if (_hintButton.Contains(position))
             {
                 _hintButton.UpdateCursor(position);
                 return;
             }
 
-            _fillNotesButton.UpdateCursor(position);
+            if (_fillNotesButton.Contains(position))
+            {
+                _fillNotesButton.UpdateCursor(position);
+                return;
+            }
+
+            _newGameButton.UpdateCursor(position);
         }
 
         private bool IsHintButtonClick(Point position)
@@ -135,6 +190,23 @@ namespace Sudoku.GameEngines
         private bool IsFillNotesButtonClick(Point position)
         {
             return _fillNotesButton.Contains(position);
+        }
+
+        private bool IsNewlyPressed(ButtonState current, ButtonState previous)
+        {
+            return current == ButtonState.Pressed && previous == ButtonState.Released;
+        }
+
+        private void HandleNewGameConfirmation(Point position, ref GameStateData gameStateData)
+        {
+            if (GetConfirmationYesButtonRectangle().Contains(position))
+            {
+                gameStateData.CurrentState = GameState.NewGame;
+            }
+            else if (GetConfirmationNoButtonRectangle().Contains(position))
+            {
+                _showNewGameConfirmation = false;
+            }
         }
 
         private void DrawHintButton(GraphicsEngine graphicsEngine)
@@ -153,6 +225,28 @@ namespace Sudoku.GameEngines
         private void DrawFillNotesButton(GraphicsEngine graphicsEngine)
         {
             _fillNotesButton.Draw(graphicsEngine);
+        }
+
+        private void DrawNewGameButton(GraphicsEngine graphicsEngine)
+        {
+            _newGameButton.Draw(graphicsEngine);
+        }
+
+        private void DrawNewGameConfirmation(GraphicsEngine graphicsEngine)
+        {
+            var dialog = new Rectangle(120, 250, 360, 250);
+            var yesButton = new Button(GetConfirmationYesButtonRectangle(), "Yes", Theme.ButtonPrimary, () => Art.NoteFont);
+            var noButton = new Button(GetConfirmationNoButtonRectangle(), "No", Theme.ButtonSecondary, () => Art.NoteFont);
+
+            graphicsEngine.FillRectangle(dialog, Theme.Background);
+            Vector2 textSize = Art.NoteFont.MeasureString("Start a new game?");
+            graphicsEngine.SpriteBatch.DrawString(
+                Art.NoteFont,
+                "Start a new game?",
+                new Vector2(dialog.X + (dialog.Width - textSize.X) / 2, dialog.Y + 45),
+                Theme.TextPrimary);
+            yesButton.Draw(graphicsEngine);
+            noButton.Draw(graphicsEngine);
         }
 
         private void FillAllNotes()
@@ -183,6 +277,7 @@ namespace Sudoku.GameEngines
                         {
                             var note = cell.Notes[(value - 1) / 3, (value - 1) % 3];
                             note.Value = value;
+                            note.IsNumberHighlighted = value == _view.SelectedValue;
                         }
                     }
                 }
@@ -237,19 +332,75 @@ namespace Sudoku.GameEngines
             }
         }
 
+        private bool TrySelectPileValue(Point position)
+        {
+            int slotWidth = _view.BoardWidth / 9;
+            int pileY = _view.TopLeftY + _view.BoardHeight + _view.BorderThickness * 2;
+            if (position.Y < pileY || position.Y >= pileY + _view.CellSize)
+            {
+                return false;
+            }
+
+            int slot = (position.X - _view.TopLeftX) / slotWidth;
+            if (slot < 0 || slot >= 9)
+            {
+                return false;
+            }
+
+            int slotX = _view.TopLeftX + slot * slotWidth + (slotWidth - _view.CellSize) / 2;
+            if (position.X < slotX || position.X >= slotX + _view.CellSize)
+            {
+                return false;
+            }
+
+            int value = slot + 1;
+            if (_board.Pile.Values[value] <= 0)
+            {
+                return true;
+            }
+
+            SelectValue(value);
+            return true;
+        }
+
         private void SelectCell(Cell cell)
         {
-            ClearHighlights();
+            if (cell.Value == 0)
+            {
+                SetSelectedCell(cell);
+                return;
+            }
 
+            ClearHighlights();
+            SetSelectedCell(cell);
+            _view.SelectedValue = cell.Value;
+
+            HighlightRowColumnAndBox(cell);
+            HighlightMatchingNumbers(cell.Value);
+        }
+
+        private void SetSelectedCell(Cell cell)
+        {
             if (_view.SelectedCell != null)
             {
                 _view.SelectedCell.IsSelected = false;
             }
             cell.IsSelected = true;
             _view.SelectedCell = cell;
+        }
 
-            HighlightRowColumnAndBox(cell);
-            HighlightMatchingNumbers(cell.Value);
+        private void SelectValue(int value)
+        {
+            ClearHighlights();
+
+            if (_view.SelectedCell != null)
+            {
+                _view.SelectedCell.IsSelected = false;
+                _view.SelectedCell = null;
+            }
+
+            _view.SelectedValue = value;
+            HighlightMatchingNumbers(value);
         }
 
         private void ClearHighlights()
@@ -417,6 +568,7 @@ namespace Sudoku.GameEngines
         {
             var note = cell.Notes[(value - 1) / 3, (value - 1) % 3];
             note.Value = note.Value == value ? 0 : value;
+            note.IsNumberHighlighted = note.Value == _view.SelectedValue;
 
             ExecuteOnRowAndColumn(cell, (row, col) =>
             {
