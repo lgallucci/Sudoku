@@ -1,20 +1,35 @@
 using System;
+using System.Buffers.Binary;
 using System.IO;
-using System.Text;
 
 namespace SudokuLib.GameLogic;
 
 public record PuzzleRecord(int Id, string Puzzle, string Solution, string HardestAlgorithm);
 
-// Fixed-width, single-byte-per-char record layout so any puzzle can be located and read
-// by index alone (offset = index * RecordLength), without loading the whole tier file.
+// Fixed-width binary record layout so any puzzle can be located and read by index alone
+// (offset = index * RecordLength), without loading the whole tier file.
 public static class PuzzleFileFormat
 {
-    public const int IdLength = 10;
     public const int CellCount = 81;
-    public const int AlgorithmLength = 32; // fits the longest strategy name ("Brute Force / Advanced Chains") plus padding
-    public const int RecordLength = IdLength + CellCount + CellCount + AlgorithmLength + 1; // + '\n'
-    public static readonly Encoding Encoding = Encoding.ASCII;
+    public const int PackedCellLength = (CellCount + 1) / 2;
+    public const int RecordLength = sizeof(int) + PackedCellLength + PackedCellLength + sizeof(byte);
+
+    private static readonly string[] Algorithms =
+    {
+        "Naked Singles",
+        "Hidden Singles",
+        "Pointing Pairs",
+        "Naked Pairs",
+        "Hidden Pairs",
+        "Box/Line Reduction",
+        "Naked Triples",
+        "Hidden Triples",
+        "X-Wing",
+        "Naked Quads",
+        "Hidden Quads",
+        "Swordfish",
+        "Brute Force / Advanced Chains"
+    };
 
     public static string GetTierFileName(int tier) => $"tier{tier}.puzzles";
 
@@ -24,26 +39,69 @@ public static class PuzzleFileFormat
             throw new ArgumentException($"Puzzle must be {CellCount} characters long.", nameof(record));
         if (record.Solution.Length != CellCount)
             throw new ArgumentException($"Solution must be {CellCount} characters long.", nameof(record));
-        if (record.HardestAlgorithm.Length > AlgorithmLength)
-            throw new ArgumentException($"HardestAlgorithm must be at most {AlgorithmLength} characters long.", nameof(record));
+        if (record.Id < 0)
+            throw new ArgumentException("Id must not be negative.", nameof(record));
 
-        string id = record.Id.ToString();
-        if (id.Length > IdLength)
-            throw new ArgumentException($"Id {record.Id} does not fit in {IdLength} characters.", nameof(record));
+        int algorithmIndex = Array.IndexOf(Algorithms, record.HardestAlgorithm);
+        if (algorithmIndex < 0)
+            throw new ArgumentException($"Unknown hardest algorithm: {record.HardestAlgorithm}", nameof(record));
 
-        string line = id.PadLeft(IdLength, '0') + record.Puzzle + record.Solution
-            + record.HardestAlgorithm.PadRight(AlgorithmLength) + "\n";
-        return Encoding.GetBytes(line);
+        byte[] buffer = new byte[RecordLength];
+        BinaryPrimitives.WriteInt32LittleEndian(buffer, record.Id);
+        PackCells(record.Puzzle, buffer, sizeof(int));
+        PackCells(record.Solution, buffer, sizeof(int) + PackedCellLength);
+        buffer[^1] = (byte)(algorithmIndex + 1);
+        return buffer;
     }
 
     public static PuzzleRecord Deserialize(byte[] buffer)
     {
-        string line = Encoding.GetString(buffer).TrimStart().TrimStart('\n');
-        int id = int.Parse(line.AsSpan(0, IdLength));
-        string puzzle = line.Substring(IdLength, CellCount);
-        string solution = line.Substring(IdLength + CellCount, CellCount);
-        string algorithm = line.Substring(IdLength + CellCount + CellCount).TrimEnd();
-        return new PuzzleRecord(id, puzzle, solution, algorithm);
+        if (buffer.Length != RecordLength)
+            throw new ArgumentException($"A puzzle record must be {RecordLength} bytes long.", nameof(buffer));
+
+        int id = BinaryPrimitives.ReadInt32LittleEndian(buffer);
+        string puzzle = UnpackCells(buffer, sizeof(int), useDotsForZero: true);
+        string solution = UnpackCells(buffer, sizeof(int) + PackedCellLength, useDotsForZero: false);
+        int algorithmIndex = buffer[^1] - 1;
+        if (algorithmIndex < 0 || algorithmIndex >= Algorithms.Length)
+            throw new InvalidDataException($"Unknown algorithm ID in puzzle record: {buffer[^1]}.");
+
+        return new PuzzleRecord(id, puzzle, solution, Algorithms[algorithmIndex]);
+    }
+
+    private static void PackCells(string cells, byte[] buffer, int offset)
+    {
+        for (int index = 0; index < CellCount; index += 2)
+        {
+            byte first = ParseCell(cells[index]);
+            byte second = index + 1 < CellCount ? ParseCell(cells[index + 1]) : (byte)0;
+            buffer[offset + index / 2] = (byte)(first | (second << 4));
+        }
+    }
+
+    private static string UnpackCells(byte[] buffer, int offset, bool useDotsForZero)
+    {
+        char[] cells = new char[CellCount];
+        for (int index = 0; index < CellCount; index++)
+        {
+            byte value = (byte)((buffer[offset + index / 2] >> (index % 2 * 4)) & 0x0F);
+            if (value > 9)
+                throw new InvalidDataException($"Invalid cell value in puzzle record: {value}.");
+
+            cells[index] = value == 0 && useDotsForZero ? '.' : (char)('0' + value);
+        }
+
+        return new string(cells);
+    }
+
+    private static byte ParseCell(char value)
+    {
+        if (value == '.')
+            return 0;
+        if (value >= '0' && value <= '9')
+            return (byte)(value - '0');
+
+        throw new ArgumentException($"Invalid cell value: {value}.");
     }
 }
 
@@ -92,6 +150,12 @@ public sealed class PuzzleTierReader : IDisposable
     public PuzzleTierReader(string filePath)
     {
         _stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 1 << 16);
+        if (_stream.Length % PuzzleFileFormat.RecordLength != 0)
+        {
+            _stream.Dispose();
+            throw new InvalidDataException($"Puzzle file size is not a multiple of {PuzzleFileFormat.RecordLength} bytes. It may use an older format.");
+        }
+
         Count = (int)(_stream.Length / PuzzleFileFormat.RecordLength);
     }
 
