@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SudokuLib.GameLogic;
@@ -24,13 +25,21 @@ internal static class Program
     private const int MaxTier = 5;
     private const int BatchSize = 20_000;
     private const string ProgressFileName = "progress.txt";
+    private const int LegacyLineLength = 204;
 
     private static int Main(string[] args)
     {
         if (args.Length < 1)
         {
             Console.Error.WriteLine("Usage: SudokuPuzzleImporter <csv-path> [output-dir]");
+            Console.Error.WriteLine("   or: SudokuPuzzleImporter --convert-legacy [output-dir]");
             return 1;
+        }
+
+        if (args[0] == "--convert-legacy")
+        {
+            string convertOutputDir = args.Length > 1 ? args[1] : ".";
+            return ConvertLegacyFiles(convertOutputDir);
         }
 
         string csvPath = args[0];
@@ -123,6 +132,66 @@ internal static class Program
         }
 
         return 0;
+    }
+
+    private static int ConvertLegacyFiles(string outputDir)
+    {
+        for (int tier = MinTier; tier <= MaxTier; tier++)
+        {
+            string path = Path.Combine(outputDir, PuzzleFileFormat.GetTierFileName(tier));
+            string tempPath = path + ".binary.tmp";
+
+            if (!File.Exists(path))
+            {
+                Console.Error.WriteLine($"Legacy puzzle file not found: {path}");
+                return 1;
+            }
+
+            try
+            {
+                long recordCount = 0;
+                long skippedCount = 0;
+                using (var input = new StreamReader(path, Encoding.ASCII, detectEncodingFromByteOrderMarks: false))
+                {
+                    using var output = new PuzzleTierWriter(tempPath);
+                    string? line;
+                    while ((line = input.ReadLine()) != null)
+                    {
+                        if (line.Length != LegacyLineLength)
+                        {
+                            skippedCount++;
+                            continue;
+                        }
+
+                        output.Write(ParseLegacyRecord(line));
+                        recordCount++;
+                    }
+                }
+
+                File.Move(tempPath, path, overwrite: true);
+                Console.WriteLine($"Converted {path}: {recordCount:N0} records, skipped {skippedCount:N0} malformed records");
+            }
+            catch
+            {
+                if (File.Exists(tempPath))
+                {
+                    File.Delete(tempPath);
+                }
+
+                throw;
+            }
+        }
+
+        return 0;
+    }
+
+    private static PuzzleRecord ParseLegacyRecord(string line)
+    {
+        int id = int.Parse(line.AsSpan(0, 10));
+        string puzzle = line.Substring(10, PuzzleFileFormat.CellCount);
+        string solution = line.Substring(10 + PuzzleFileFormat.CellCount, PuzzleFileFormat.CellCount);
+        string algorithm = line.Substring(10 + PuzzleFileFormat.CellCount * 2, 32).TrimEnd();
+        return new PuzzleRecord(id, puzzle, solution, algorithm);
     }
 
     private static bool TryParseRow(string line, out int id, out string puzzle, out string solution)

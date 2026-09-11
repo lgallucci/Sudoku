@@ -16,6 +16,7 @@ public static class PuzzleFileFormat
 
     private static readonly string[] Algorithms =
     {
+        "Naked/Hidden Singles",
         "Naked Singles",
         "Hidden Singles",
         "Pointing Pairs",
@@ -28,6 +29,13 @@ public static class PuzzleFileFormat
         "Naked Quads",
         "Hidden Quads",
         "Swordfish",
+        "Y-Wing",
+        "W-Wing",
+        "BUG+1",
+        "Unique Rectangle",
+        "Rectangle Elimination",
+        "Simple Colouring",
+        "XYZ-Wing",
         "Brute Force / Advanced Chains"
     };
 
