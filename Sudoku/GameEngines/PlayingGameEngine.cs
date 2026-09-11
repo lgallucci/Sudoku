@@ -6,23 +6,17 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using SudokuLib.GameLogic;
 using SudokuGraphics;
-using SudokuGraphics.DrawObjects;
 using SudokuLib.GameObjects;
-using FontStashSharp;
 
 namespace Sudoku.GameEngines
 {
     public class PlayingGameEngine : GameEngine
     {
         private readonly BoardViewState _view;
-        private readonly BoardRenderer _boardRenderer;
+        private readonly PlayingGameUi _ui;
         private readonly Board _board;
         private readonly int[,] _solution;
         private readonly string _hardestAlgorithm;
-        private readonly Button _hintButton;
-        private readonly Button _fillNotesButton;
-        private readonly Button _newGameButton;
-        private readonly ConfirmationDialog _newGameDialog;
         private readonly Stopwatch _gameTimer;
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
@@ -42,11 +36,7 @@ namespace Sudoku.GameEngines
             _board = new Board(startingBoard);
 
             _view = new BoardViewState();
-            _boardRenderer = new BoardRenderer();
-            _hintButton = new Button(GetHintButtonRectangle(), "Show Hint", Theme.ButtonPrimary, () => Art.NoteFont);
-            _fillNotesButton = new Button(GetFillNotesButtonRectangle(), "Fill Notes", Theme.ButtonPrimary, () => Art.NoteFont);
-            _newGameButton = new Button(GetNewGameButtonRectangle(), "New Game", Theme.ButtonPrimary, () => Art.NoteFont);
-            _newGameDialog = new ConfirmationDialog();
+            _ui = new PlayingGameUi();
             _gameTimer = Stopwatch.StartNew();
         }
 
@@ -64,14 +54,7 @@ namespace Sudoku.GameEngines
 
         public override void Draw(GraphicsEngine graphicsEngine)
         {
-            _boardRenderer.RenderBoard(_board, _view, graphicsEngine.Context, _gameTimer.Elapsed);
-            DrawHintButton(graphicsEngine);
-            DrawFillNotesButton(graphicsEngine);
-            DrawNewGameButton(graphicsEngine);
-            if (_newGameDialog.IsOpen)
-            {
-                _newGameDialog.Draw(graphicsEngine);
-            }
+            _ui.Draw(graphicsEngine, _board, _view, _gameTimer.Elapsed, _hardestAlgorithm, _showHint);
         }
 
         public override void Update(GameTime gameTime, ref GameStateData _gameStateData)
@@ -79,14 +62,14 @@ namespace Sudoku.GameEngines
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();
 
-            UpdateCursor(mouseState.Position);
+            _ui.UpdateCursor(mouseState.Position);
 
             if (IsNewlyPressed(mouseState.LeftButton, _previousMouseState.LeftButton))
             {
                 HandleMouseClick(mouseState.Position, ref _gameStateData);
             }
 
-            if (_newGameDialog.IsOpen)
+            if (_ui.IsConfirmationOpen)
             {
                 _previousMouseState = mouseState;
                 _previousKeyboardState = keyboardState;
@@ -104,60 +87,22 @@ namespace Sudoku.GameEngines
             _previousKeyboardState = keyboardState;
         }
 
-        private Rectangle GetHintButtonRectangle()
-        {
-            return new Rectangle(450, 20, 125, 38);
-        }
-
-        private Rectangle GetFillNotesButtonRectangle()
-        {
-            return new Rectangle(175, 20, 125, 38);
-        }
-
-        private Rectangle GetNewGameButtonRectangle()
-        {
-            return new Rectangle(20, 20, 125, 38);
-        }
-
-        private void UpdateCursor(Point position)
-        {
-            if (_newGameDialog.IsOpen)
-            {
-                _newGameDialog.UpdateCursor(position);
-                return;
-            }
-
-            if (_hintButton.Contains(position))
-            {
-                _hintButton.UpdateCursor(position);
-                return;
-            }
-
-            if (_fillNotesButton.Contains(position))
-            {
-                _fillNotesButton.UpdateCursor(position);
-                return;
-            }
-
-            _newGameButton.UpdateCursor(position);
-        }
-
         private void HandleMouseClick(Point position, ref GameStateData gameStateData)
         {
-            if (_newGameDialog.IsOpen)
+            switch (_ui.HandleClick(position))
             {
-                if (_newGameDialog.HandleClick(position))
-                {
+                case PlayingUiAction.ShowHint:
+                    _showHint = true;
+                    return;
+                case PlayingUiAction.FillNotes:
+                    FillAllNotes();
+                    return;
+                case PlayingUiAction.StartNewGame:
                     gameStateData.CurrentState = GameState.NewGame;
-                }
-                return;
+                    return;
             }
 
-            if (_newGameButton.Contains(position))
-            {
-                _newGameDialog.Open();
-            }
-            else if (_view.IsSolved)
+            if (!_ui.IsConfirmationOpen && _view.IsSolved)
             {
                 gameStateData.CurrentState = GameState.NewGame;
             }
@@ -165,15 +110,7 @@ namespace Sudoku.GameEngines
 
         private void HandleGameplayMouseClick(Point position)
         {
-            if (_hintButton.Contains(position))
-            {
-                _showHint = true;
-            }
-            else if (_fillNotesButton.Contains(position))
-            {
-                FillAllNotes();
-            }
-            else if (!TrySelectPileValue(position))
+            if (!TrySelectPileValue(position))
             {
                 SelectCellAt(position.X, position.Y);
             }
@@ -182,29 +119,6 @@ namespace Sudoku.GameEngines
         private bool IsNewlyPressed(ButtonState current, ButtonState previous)
         {
             return current == ButtonState.Pressed && previous == ButtonState.Released;
-        }
-
-        private void DrawHintButton(GraphicsEngine graphicsEngine)
-        {
-            _hintButton.Draw(graphicsEngine);
-            
-            if (_showHint)
-            {
-                var hintText = $"Hint: {_hardestAlgorithm}";
-                var textSize = Art.NoteFont.MeasureString(hintText);
-                var hintPosition = new Vector2(Math.Max(20, graphicsEngine.ScreenSize.X - textSize.X - 20), 68);
-                graphicsEngine.SpriteBatch.DrawString(Art.NoteFont, hintText, hintPosition, Theme.TextPrimary);
-            }
-        }
-
-        private void DrawFillNotesButton(GraphicsEngine graphicsEngine)
-        {
-            _fillNotesButton.Draw(graphicsEngine);
-        }
-
-        private void DrawNewGameButton(GraphicsEngine graphicsEngine)
-        {
-            _newGameButton.Draw(graphicsEngine);
         }
 
         private void FillAllNotes()
