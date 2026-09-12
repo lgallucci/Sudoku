@@ -416,6 +416,10 @@ namespace Sudoku.GameEngines
                         ClearNotesRowColumnAndBox(selectedCell);
                         SelectCell(selectedCell); // refresh highlights to match the cell's new value
                     }
+                    else
+                    {
+                        _board.SetInvalidCellValue(selectedCell.Row, selectedCell.Col, value);                        
+                    }
                 }
                 else if (key == Keys.Delete || key == Keys.Back)
                 {

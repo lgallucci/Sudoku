@@ -39,9 +39,21 @@ namespace SudokuLib.GameObjects
                 var previousValue = cells[row, col].Value;
                 cells[row, col].SetValue(value);
                 Pile.TryUseValue(value, previousValue);
+                cells[row, col].IsNumberInvalid = false;
                 return true;
             }
             return false;
+        }
+
+        public void SetInvalidCellValue(int row, int col, int value)
+        {
+            if (row < 0 || row >= 9 || col < 0 || col >= 9)
+            {
+                throw new ArgumentOutOfRangeException("Row and column must be between 0 and 8.");
+            }
+
+            cells[row, col].SetValue(value);
+            cells[row, col].IsNumberInvalid = true;
         }
 
         public Cell GetCell(int row, int col)

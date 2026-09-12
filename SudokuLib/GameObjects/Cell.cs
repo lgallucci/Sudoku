@@ -9,6 +9,7 @@ namespace SudokuLib.GameObjects
         public bool IsSelected { get; set; }
         public bool IsHighlighted { get; set; }
         public bool IsNumberHighlighted { get; set; }
+        public bool IsNumberInvalid { get; set; }
         public int Row { get; private set; }
         public int Col { get; private set; }
 
@@ -20,6 +21,7 @@ namespace SudokuLib.GameObjects
             IsGiven = false;
             IsSelected = false;
             IsHighlighted = false;
+            IsNumberInvalid = false;
             IsNumberHighlighted = false;
             Row = row;
             Col = col;

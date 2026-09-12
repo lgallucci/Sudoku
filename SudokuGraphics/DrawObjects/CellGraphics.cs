@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using SudokuLib.GameObjects;
 using System;
+using FontStashSharp.RichText;
 
 namespace SudokuGraphics.DrawObjects
 {
@@ -24,7 +25,13 @@ namespace SudokuGraphics.DrawObjects
                 var textSize = font.MeasureString(valueString);
                 var position = new Vector2(cellX + (boardState.CellSize - textSize.X) / 2,
                 cellY + (boardState.CellSize - textSize.Y) / 2);
-                spriteBatch.DrawString(font, valueString, position, GetFontColor(cell));
+
+                var layout = new RichTextLayout()
+                {
+                    Font = font,
+                    Text = cell.IsNumberInvalid ? "/ts" + valueString + "/td" : valueString,
+                };
+                layout.Draw(spriteBatch, position, GetFontColor(cell));
             }
         }
 
@@ -49,13 +56,14 @@ namespace SudokuGraphics.DrawObjects
 
         private Color GetFontColor(Cell cell)
         {
+            if (cell.IsNumberInvalid)
+                return Theme.InvalidColor;
             if (cell.IsNumberHighlighted)
                 return Theme.HighlightColor;
+            if (cell.IsGiven)
+                return Theme.TextSecondary;
             else
-                if (cell.IsGiven)
-                    return Theme.TextSecondary;
-                else
-                    return Theme.TextAccent;
+                return Theme.TextAccent;
         }
     }
 }
