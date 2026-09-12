@@ -9,6 +9,6 @@
     <ProjectReference Include="../SudokuGraphics/SudokuGraphics.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="../tier*.puzzles" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../release-puzzles/tier*.puzzles" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

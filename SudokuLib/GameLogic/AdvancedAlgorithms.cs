@@ -275,7 +275,7 @@ namespace SudokuLib.GameLogic
                 foreach (var tail in Combinations(items, size - 1, index + 1)) { tail.Insert(0, items[index]); yield return tail; }
         }
 
-            private static bool FindFish(int[,] grid, HashSet<int>[,] candidates, int value, bool byRows, int fishSize = 3)
+        private static bool FindFish(int[,] grid, HashSet<int>[,] candidates, int value, bool byRows, int fishSize = 3)
         {
             var lines = new List<(int Line, HashSet<int> Positions)>();
             for (var line = 0; line < 9; line++)

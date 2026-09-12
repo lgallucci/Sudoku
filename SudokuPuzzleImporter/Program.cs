@@ -33,6 +33,7 @@ internal static class Program
         {
             Console.Error.WriteLine("Usage: SudokuPuzzleImporter <csv-path> [output-dir]");
             Console.Error.WriteLine("   or: SudokuPuzzleImporter --convert-legacy [output-dir]");
+            Console.Error.WriteLine("   or: SudokuPuzzleImporter --build-release-cache <source-dir> <output-dir> [sample-count]");
             return 1;
         }
 
@@ -40,6 +41,17 @@ internal static class Program
         {
             string convertOutputDir = args.Length > 1 ? args[1] : ".";
             return ConvertLegacyFiles(convertOutputDir);
+        }
+
+        if (args[0] == "--build-release-cache")
+        {
+            if (args.Length < 3 || !int.TryParse(args.Length > 3 ? args[3] : "10000", out int sampleCount))
+            {
+                Console.Error.WriteLine("Usage: SudokuPuzzleImporter --build-release-cache <source-dir> <output-dir> [sample-count]");
+                return 1;
+            }
+
+            return BuildReleaseCache(args[1], args[2], sampleCount);
         }
 
         string csvPath = args[0];
@@ -58,7 +70,7 @@ internal static class Program
         bool resuming = resumeRows > 0;
 
         var writers = new PuzzleTierWriter[MaxTier + 1];
-        for (int tier = MinTier; tier <= MaxTier; tier++)
+        for (int tier = 4; tier <= MaxTier; tier++)
         {
             string path = Path.Combine(outputDir, PuzzleFileFormat.GetTierFileName(tier));
             writers[tier] = new PuzzleTierWriter(path, append: resuming);
@@ -183,6 +195,50 @@ internal static class Program
         }
 
         return 0;
+    }
+
+    private static int BuildReleaseCache(string sourceDir, string outputDir, int sampleCount)
+    {
+        if (sampleCount <= 0)
+        {
+            Console.Error.WriteLine("Sample count must be positive.");
+            return 1;
+        }
+
+        Directory.CreateDirectory(outputDir);
+        for (int tier = MinTier; tier <= MaxTier; tier++)
+        {
+            string sourcePath = Path.Combine(sourceDir, PuzzleFileFormat.GetTierFileName(tier));
+            if (!File.Exists(sourcePath))
+            {
+                Console.Error.WriteLine($"Source puzzle file not found: {sourcePath}");
+                return 1;
+            }
+
+            WriteRandomSample(sourcePath, Path.Combine(outputDir, PuzzleFileFormat.GetTierFileName(tier)), sampleCount, tier);
+        }
+
+        return 0;
+    }
+
+    private static void WriteRandomSample(string sourcePath, string outputPath, int sampleCount, int tier)
+    {
+        using var reader = new PuzzleTierReader(sourcePath);
+        int count = Math.Min(sampleCount, reader.Count);
+        var random = new Random(20260911 + tier);
+        var selectedIndices = new HashSet<int>();
+        while (selectedIndices.Count < count)
+        {
+            selectedIndices.Add(random.Next(reader.Count));
+        }
+
+        using var writer = new PuzzleTierWriter(outputPath);
+        foreach (int sourceIndex in selectedIndices)
+        {
+            writer.Write(reader.GetAt(sourceIndex));
+        }
+
+        Console.WriteLine($"Randomly sampled {outputPath}: {count:N0} records");
     }
 
     private static PuzzleRecord ParseLegacyRecord(string line)

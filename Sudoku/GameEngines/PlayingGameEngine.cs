@@ -78,7 +78,11 @@ namespace Sudoku.GameEngines
 
             if (!_view.IsSolved)
             {
-                HandleGameplayMouseClick(mouseState.Position);
+                if (IsNewlyPressed(mouseState.LeftButton, _previousMouseState.LeftButton))
+                {
+                    HandleGameplayMouseClick(mouseState.Position);
+                }
+
                 HandleArrowKeys(keyboardState);
                 HandleKeyboardInput(keyboardState);
                 CheckForSolved();

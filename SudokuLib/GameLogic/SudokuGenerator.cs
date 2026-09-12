@@ -134,17 +134,7 @@ public class SudokuGenerator
 
             int backup = board[row, col];
             board[row, col] = 0;
-
-            var proposed = CloneBoard(board);
-            counter = 0;
-            if (!FillPuzzle(proposed))
-            {
-                board[row, col] = backup;
-            }
-            else
-            {
-                removedVals.Add((row, col, backup));
-            }
+            removedVals.Add((row, col, backup));
         }
         return (removedVals, board);
     }
@@ -233,26 +223,84 @@ public class SudokuGenerator
 
     public static bool MultiplePossibleSolutions(int[,] board)
     {
-        var possibleSolutions = new HashSet<string>();
-        var emptyCells = EmptyCellCoords(board);
+        return CountSolutions(board, 2) > 1;
+    }
 
-        for (int i = 0; i < emptyCells.Count; i++)
+    private static int CountSolutions(int[,] board, int limit)
+    {
+        var emptyCell = FindCellWithFewestCandidates(board, out List<int> candidates);
+        if (!emptyCell.HasValue)
         {
-            var rotated = new List<(int row, int col)>(emptyCells);
-            var start = rotated[i];
-            rotated.RemoveAt(i);
-            rotated.Insert(0, start);
-
-            var clone = CloneBoard(board);
-            pokeCounter = 0;
-
-            FillFromArray(clone, rotated);
-            string solution = string.Join(",", clone.Cast<int>());
-            possibleSolutions.Add(solution);
-
-            if (possibleSolutions.Count > 1) return true;
+            return 1;
         }
 
-        return false;
+        if (candidates.Count == 0)
+        {
+            return 0;
+        }
+
+        int solutions = 0;
+        var (row, col) = emptyCell.Value;
+        foreach (int value in candidates)
+        {
+            board[row, col] = value;
+            solutions += CountSolutions(board, limit - solutions);
+            board[row, col] = 0;
+
+            if (solutions >= limit)
+            {
+                return solutions;
+            }
+        }
+
+        return solutions;
+    }
+
+    private static (int row, int col)? FindCellWithFewestCandidates(int[,] board, out List<int> candidates)
+    {
+        candidates = null;
+        (int row, int col)? bestCell = null;
+        int fewestCandidates = SIZE + 1;
+
+        for (int row = 0; row < SIZE; row++)
+        {
+            for (int col = 0; col < SIZE; col++)
+            {
+                if (board[row, col] != 0)
+                {
+                    continue;
+                }
+
+                var cellCandidates = GetCandidates(board, row, col);
+                if (cellCandidates.Count < fewestCandidates)
+                {
+                    bestCell = (row, col);
+                    candidates = cellCandidates;
+                    fewestCandidates = cellCandidates.Count;
+
+                    if (fewestCandidates <= 1)
+                    {
+                        return bestCell;
+                    }
+                }
+            }
+        }
+
+        candidates ??= new List<int>();
+        return bestCell;
+    }
+
+    private static List<int> GetCandidates(int[,] board, int row, int col)
+    {
+        var candidates = new List<int>();
+        for (int value = 1; value <= SIZE; value++)
+        {
+            if (SafeToPlace(board, row, col, value))
+            {
+                candidates.Add(value);
+            }
+        }
+
+        return candidates;
     }
 }
