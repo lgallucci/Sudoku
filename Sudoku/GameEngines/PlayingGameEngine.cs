@@ -38,6 +38,9 @@ namespace Sudoku.GameEngines
             _view = new BoardViewState();
             _ui = new PlayingGameUi();
             _gameTimer = Stopwatch.StartNew();
+
+            _previousMouseState = Mouse.GetState();
+            _previousKeyboardState = Keyboard.GetState();
         }
 
         private static int[,] ParseBoard(string serializedBoard)
@@ -67,6 +70,13 @@ namespace Sudoku.GameEngines
             if (IsNewlyPressed(mouseState.LeftButton, _previousMouseState.LeftButton))
             {
                 HandleMouseClick(mouseState.Position, ref _gameStateData);
+            }
+
+            if (_gameStateData.CurrentState != GameState.Playing)
+            {
+                _previousMouseState = mouseState;
+                _previousKeyboardState = keyboardState;
+                return;
             }
 
             if (_ui.IsConfirmationOpen)

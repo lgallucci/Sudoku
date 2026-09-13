@@ -27,7 +27,7 @@ namespace Sudoku.GameEngines
         public PlayingGameUi()
         {
             _hintButton = new Button(new Rectangle(450, 20, 125, 38), "Show Hint", Theme.ButtonPrimary, () => Art.NoteFont);
-            _fillNotesButton = new Button(new Rectangle(175, 20, 125, 38), "Fill Notes", Theme.ButtonPrimary, () => Art.NoteFont);
+            _fillNotesButton = new Button(new Rectangle(235, 20, 125, 38), "Fill Notes", Theme.ButtonPrimary, () => Art.NoteFont);
             _newGameButton = new Button(new Rectangle(20, 20, 125, 38), "New Game", Theme.ButtonPrimary, () => Art.NoteFont);
         }
 

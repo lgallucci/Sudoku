@@ -44,6 +44,9 @@ namespace Sudoku.GameEngines
                 "New Game",
                 Theme.ButtonPrimary,
                 () => Art.NewGameFont);
+
+            _previousMouseState = Mouse.GetState();
+            _previousKeyboardState = Keyboard.GetState();
         }
 
         public override void Draw(GraphicsEngine _graphicsEngine)
