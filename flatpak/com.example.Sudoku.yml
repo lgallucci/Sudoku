@@ -1,0 +1,32 @@
+app-id: com.example.Sudoku
+runtime: org.freedesktop.Platform
+runtime-version: "24.08"
+sdk: org.freedesktop.Sdk
+command: sudoku
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --device=dri
+
+modules:
+  - name: sudoku
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 Sudoku /app/bin/sudoku
+      - cp -r Content /app/bin/
+      - install -Dm644 tier1.puzzles /app/bin/tier1.puzzles
+      - install -Dm644 tier2.puzzles /app/bin/tier2.puzzles
+      - install -Dm644 tier3.puzzles /app/bin/tier3.puzzles
+      - install -Dm644 tier4.puzzles /app/bin/tier4.puzzles
+      - install -Dm644 tier5.puzzles /app/bin/tier5.puzzles
+      - install -Dm644 com.example.Sudoku.desktop /app/share/applications/com.example.Sudoku.desktop
+      - install -Dm644 com.example.Sudoku.svg /app/share/icons/hicolor/scalable/apps/com.example.Sudoku.svg
+    sources:
+      - type: dir
+        path: ../publish/linux-x64
+      - type: file
+        path: com.example.Sudoku.desktop
+      - type: file
+        path: com.example.Sudoku.svg

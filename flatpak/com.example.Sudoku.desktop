@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Sudoku
+Comment=Play Sudoku puzzles
+Exec=sudoku
+Icon=com.example.Sudoku
+Terminal=false
+Type=Application
+Categories=Game;BoardGame;

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using FontStashSharp;
 using Microsoft.Xna.Framework.Content;
@@ -17,8 +18,8 @@ namespace SudokuGraphics
             // Load font system
             FontSystem robotoFont = new FontSystem();
 
-            // 2. Load the font by reading its raw bytes
-            byte[] fontBytes = File.ReadAllBytes("Content/fonts/roboto.ttf");
+            byte[] fontBytes = File.ReadAllBytes(
+                Path.Combine(AppContext.BaseDirectory, "Content", "fonts", "roboto.ttf"));
             robotoFont.AddFont(fontBytes);
 
             NoteFont = robotoFont.GetFont(20);
