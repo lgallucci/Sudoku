@@ -14,7 +14,10 @@ modules:
   - name: sudoku
     buildsystem: simple
     build-commands:
-      - install -Dm755 Sudoku /app/bin/sudoku
+      - install -d /app/bin
+      - cp -a *.dll *.json *.so* Sudoku createdump /app/bin/
+      - mv /app/bin/Sudoku /app/bin/sudoku
+      - chmod 755 /app/bin/sudoku
       - cp -r Content /app/bin/
       - install -Dm644 tier1.puzzles /app/bin/tier1.puzzles
       - install -Dm644 tier2.puzzles /app/bin/tier2.puzzles

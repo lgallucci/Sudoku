@@ -456,6 +456,11 @@ namespace Sudoku.GameEngines
 
         private void ToggleNote(Cell cell, int value)
         {
+            if (cell.Value != 0)
+            {
+                return;
+            }
+
             var note = cell.Notes[(value - 1) / 3, (value - 1) % 3];
             note.Value = note.Value == value ? 0 : value;
             note.IsNumberHighlighted = note.Value == _view.SelectedValue;
