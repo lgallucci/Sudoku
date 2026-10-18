@@ -136,3 +136,5 @@ SudokuGraphics/Content/
 sudoku-3m.csv
 progress.txt
 /full-puzzles
+.flatpak-builder
+
