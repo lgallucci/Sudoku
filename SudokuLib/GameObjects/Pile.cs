@@ -1,44 +1,34 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace SudokuLib.GameObjects
 {
+    // Remaining counts are derived from the board's cells on every read, so they can't drift
+    // regardless of how a cell's value changes (set, replace, clear, invalid entry, board reset).
     public class Pile
     {
-        public Dictionary<int, int> Values { get; private set; }
+        private readonly Func<IEnumerable<int>> _cellValues;
 
-        public Pile()
+        public Pile(Func<IEnumerable<int>> cellValues)
         {
-            Values = new Dictionary<int, int>();
-            for (int i = 1; i <= 9; i++)
-            {
-                Values[i] = 9; // Each number from 1 to 9 can appear 9 times in a Sudoku puzzle
-            }
+            _cellValues = cellValues ?? throw new ArgumentNullException(nameof(cellValues));
         }
 
-        public bool TryUseValue(int value, int previousValue = 0)
+        public IReadOnlyDictionary<int, int> Values
         {
-            if (value < 0 || value > 9)
+            get
             {
-                throw new ArgumentOutOfRangeException("Value must be between 1 and 9.");
-            }
-
-            if (value == 0) // 0 represents an empty cell, so we don't need to use any value
-            {
-                if (previousValue != 0)
+                var remaining = Enumerable.Range(1, 9).ToDictionary(i => i, i => 9);
+                foreach (var value in _cellValues())
                 {
-                    Values[previousValue]++;
-                    return true;
+                    if (value >= 1 && value <= 9)
+                    {
+                        remaining[value]--;
+                    }
                 }
+                return remaining;
             }
-            else if (Values[value] > 0)
-            {
-                Values[value]--;
-                return true;
-            }
-            return false;
         }
     }
 }

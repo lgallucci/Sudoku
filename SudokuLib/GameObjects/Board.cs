@@ -1,15 +1,16 @@
 using System;
+using System.Linq;
 
 namespace SudokuLib.GameObjects
 {
     public class Board
     {
         private Cell[,] cells = new Cell[9, 9];     
-        public Pile Pile { get; private set; } = new Pile();
+        public Pile Pile { get; }
 
         public Board(int[,] initialValues)
         {
-            Pile = new Pile();            
+            Pile = new Pile(() => cells.Cast<Cell>().Where(c => !c.IsNumberInvalid).Select(c => c.Value));
 
             for (int row = 0; row < 9; row++)
             {
@@ -22,7 +23,6 @@ namespace SudokuLib.GameObjects
                         IsGiven = value > 0
                     };
                     cells[row, col] = cell;
-                    Pile.TryUseValue(value);
                 }
             }
         }
@@ -36,9 +36,7 @@ namespace SudokuLib.GameObjects
 
             if (IsValidMove(row, col, value))
             {
-                var previousValue = cells[row, col].Value;
                 cells[row, col].SetValue(value);
-                Pile.TryUseValue(value, previousValue);
                 cells[row, col].IsNumberInvalid = false;
                 return true;
             }
@@ -86,7 +84,7 @@ namespace SudokuLib.GameObjects
             // Check if the value is already in the same row or column
             for (int i = 0; i < 9; i++)
             {
-                if (cells[row, i].Value == value || cells[i, col].Value == value)
+                if ((i != col && cells[row, i].Value == value) || (i != row && cells[i, col].Value == value))
                 {
                     return false;
                 }
@@ -99,7 +97,7 @@ namespace SudokuLib.GameObjects
             {
                 for (int c = startCol; c < startCol + 3; c++)
                 {
-                    if (cells[r, c].Value == value)
+                    if ((r != row || c != col) && cells[r, c].Value == value)
                     {
                         return false;
                     }
